@@ -12,3 +12,5 @@ src/sim_output/
 .idea/
 out/
 
+modeling/.vscode
+modeling/__pycache__
