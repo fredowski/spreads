@@ -8,13 +8,11 @@ case class Receiver(chips: Int, code: Seq[Int]) extends Component {
     val bitValid   = out Bool()
   }
 
-  val shiftReg = Vec.fill(chips)(Reg(Bool()) init(False))
+  val shiftReg = Vec.fill(chips)(RegInit(False))
 
-  when(io.rxValid) {
-    shiftReg(0) := io.rxChip
-    for (i <- 1 until chips)
-      shiftReg(i) := shiftReg(i - 1)
-  }
+  shiftReg(0) := RegNextWhen(io.rxChip, io.rxValid)
+  for (i <- 1 until chips)
+    shiftReg(i) := RegNextWhen(shiftReg(i - 1), io.rxValid)
 
   val agreements = for (i <- code.indices) yield
     if (code(i) == 1) shiftReg(i) else !shiftReg(i)
