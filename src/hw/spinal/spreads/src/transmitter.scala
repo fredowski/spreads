@@ -3,27 +3,22 @@ import spinal.core._
 case class Transmitter(length: Int, taps: Seq[Int]) extends Component {
   val io = new Bundle {
     val enable = in Bool()
+    val data   = in Bool()
     val pnBit  = out Bool()
   }
-
-  val shiftReg = Vec.fill(length)(RegInit(False))
-
-  shiftReg(0).init(True) // Reg 0 is '1' to avoid full zero LFSR
-
+  val shiftReg = Reg(Bits(length bits)) init(1) // can't have fuill 0 lsfr
 
   var feedback = False
   for (tap <- taps) {
-    val tapIndex = tap - 1
-    feedback = feedback ^ shiftReg(tapIndex)
+    feedback = feedback ^ shiftReg(tap - 1)
   }
 
   when(io.enable) {
-    for (i <- 1 until length) {
+    for (i <- length - 1 downto 1) {
       shiftReg(i) := shiftReg(i - 1)
     }
     shiftReg(0) := feedback
   }
-
-    //  This is our pseudo random result chip
-  io.pnBit := shiftReg(length - 1)
+  
+  io.pnBit := feedback ^ io.data 
 }
