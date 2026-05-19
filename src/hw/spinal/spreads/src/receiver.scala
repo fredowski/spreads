@@ -1,4 +1,5 @@
 import spinal.core._
+import spinal.lib._
 
 case class Receiver(chips: Int, taps: Seq[Int]) extends Component {
   val io = new Bundle {
@@ -10,11 +11,10 @@ case class Receiver(chips: Int, taps: Seq[Int]) extends Component {
   }
 
   
-  val lfsrReg = Vec.fill(chips)(RegInit(False))
-  lfsrReg(0).init(True)
-  val buffer  = Vec.fill(chips)(RegInit(False))
+  val lfsrReg = Reg(Bits(chips bits)) init(1)
+  val buffer  = Reg(Bits(chips bits)) init(0)
 
-  // LFSr
+  // LFSR runs independent of buffer
   var feedback = False
   for (tap <- taps) { feedback = feedback ^ lfsrReg(tap - 1) }
   when(io.enable) {
@@ -22,7 +22,7 @@ case class Receiver(chips: Int, taps: Seq[Int]) extends Component {
     lfsrReg(0) := feedback
   }
 
-  // buffer(chips-1) is NEWEST 
+  // put input chips into buffer
   when(io.rxValid) {
     for (i <- chips - 1 downto 1) { 
       buffer(i) := buffer(i - 1) 
@@ -30,13 +30,16 @@ case class Receiver(chips: Int, taps: Seq[Int]) extends Component {
     buffer(0) := io.rxChip
   }
 
-  val agreements = for (i <- 0 until chips) yield {
-    buffer(i) === lfsrReg(i)
+  val agreements = Bits(chips bits)
+  for (i <- 0 until chips) {
+    agreements(i) := (buffer(i) ^ lfsrReg(i))  // xor all INDIVIDUAL chips
   }
 
-  var score = U(0, 8 bits)
-  for (a <- agreements) score = score + a.asUInt(8 bits)
+  val score      = CountOne(agreements)
 
-  io.decodedBit := score > U(chips / 2)
-  io.bitValid := io.rxValid && (score >= U(6) || score <= U(2))
+  val isOne  = score > (chips / 2)
+  val isZero = score < (chips / 2)
+
+  io.decodedBit := isOne
+  io.bitValid   := io.rxValid && (isOne || isZero)
 }
