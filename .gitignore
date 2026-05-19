@@ -5,11 +5,12 @@ tmp/
 src/target/
 src/project/target/
 src/project/project/
-
+src/project
 src/sim_output/
 .bloop/
 .metals/
 .idea/
+.vscode/
 out/
 
 modeling/.vscode
