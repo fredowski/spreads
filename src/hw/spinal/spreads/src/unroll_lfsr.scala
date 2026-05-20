@@ -25,8 +25,7 @@ case class UnrollLFSR(poly: Array[Int], m: Int) extends Component {
 
   val hasChanged = new Array[Boolean](poly.length)
 
-  var i = 0
-  while (i < m){
+  for (i <- 0 until m){
     for (j <- poly.indices){
       //calculate indices for taps
       poly(j) -= 1
@@ -43,7 +42,6 @@ case class UnrollLFSR(poly: Array[Int], m: Int) extends Component {
       }
     }
     next(m - i -1) := toXor(i).xorR
-    i += 1
   }
 
   when(io.cond0) {
