@@ -8,46 +8,33 @@ import spinal.core._
 //  x^32 + x^22 + x^2 + x^1 + 1
 //  x^16 + x^15 + x^11 + x^10 + x^9 + x^8 + x^6 + x^4 + x^2 + x^1 + 1
 
-//  UnrollLFSR(Array(10,3), 10)
+//  For  x^10 + x^3 + 1  with 10 bit output and 10 steps per cycle:
+//  UnrollLFSR(Array(9,2), 10, 10, 10)
 
 // Hardware definition
-case class UnrollLFSR(poly: Array[Int], m: Int) extends Component {
+case class UnrollLFSR(poly: Array[Int], m_lfsr: Int, steps: Int, n_out :Int) extends Component {
   val io = new Bundle {
     val cond0 = in  Bool()
     val flag  = out Bool()
-    val state = out UInt(m bits)
+    val rnd_o = out UInt(n_out bits)
   }
 
-  val stateReg = Reg(UInt(m bits)) init((scala.math.pow(2,m)-1).toInt)
-  val next = UInt(m bits).noCombLoopCheck
-
-  val toXor = Vec.fill(m)(Bits(poly.length bits)).noCombLoopCheck
-
-  val hasChanged = new Array[Boolean](poly.length)
-
-  for (i <- 0 until m){
-    for (j <- poly.indices){
-      //calculate indices for taps
-      poly(j) -= 1
-      if (poly(j) < 0) {
-        hasChanged(j) = true
-        poly(j) = java.lang.Math.floorMod(poly(j), m)
-      }
-
-      if (!hasChanged(j)) {
-        toXor(i)(j) := stateReg(poly(j))
-      }
-      else {
-        toXor(i)(j) := next(poly(j))
-      }
-    }
-    next(m - i -1) := toXor(i).xorR
+  def step(state: Bits): Bits = {
+    val fb = poly.foldLeft(False)((a,b) => a ^ state(b))
+    state(state.getWidth -2 downto 0) ## fb
   }
+
+  def advance(state: Bits, n:Int): Bits = {
+    (0 until n-1).foldLeft(state)((s,_) => step(s))
+  }
+
+  val sr = Reg(Bits(m_lfsr bits)) init(B(m_lfsr bits, default -> True))
+  val sr_next = advance(sr, steps)
 
   when(io.cond0) {
-    stateReg := next
+    sr := sr_next
   }
 
-  io.state := stateReg
-  io.flag := stateReg.andR
+  io.rnd_o := sr(n_out-1 downto 0).asUInt
+  io.flag := sr.andR
 }
