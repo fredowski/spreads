@@ -14,9 +14,10 @@ import spinal.core._
 // Hardware definition
 case class UnrollLFSR(poly: Array[Int], m_lfsr: Int, steps: Int, n_out :Int) extends Component {
   val io = new Bundle {
-    val cond0 = in  Bool()
+    val enable = in  Bool()
     val flag  = out Bool()
     val rnd_o = out UInt(n_out bits)
+    val skip = in Bool()
   }
 
   def step(state: Bits): Bits = {
@@ -27,12 +28,15 @@ case class UnrollLFSR(poly: Array[Int], m_lfsr: Int, steps: Int, n_out :Int) ext
   def advance(state: Bits, n:Int): Bits = {
     (0 until n-1).foldLeft(state)((s,_) => step(s))
   }
-
+  
   val sr = Reg(Bits(m_lfsr bits)) init(B(m_lfsr bits, default -> True))
-  val sr_next = advance(sr, steps)
-
-  when(io.cond0) {
-    sr := sr_next
+  
+  when(io.enable) {
+    when(io.skip) {
+      sr := advance(sr, steps+1)
+    } otherwise {
+      sr := advance(sr, steps)
+    }
   }
 
   io.rnd_o := sr(n_out-1 downto 0).asUInt

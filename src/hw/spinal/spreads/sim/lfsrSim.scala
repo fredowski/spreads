@@ -15,7 +15,7 @@ object lfsrSim extends App {
     dut.clockDomain.forkStimulus(period = 10)
 
     // var modelState = 0
-    dut.io.cond0 #= true
+    dut.io.enable #= true
     dut.clockDomain.waitRisingEdge()
     for (idx <- 0 to scala.math.pow(2,poly.max+1).toInt-3) {
       // Drive the dut inputs with random values
