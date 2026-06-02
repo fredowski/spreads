@@ -1,5 +1,3 @@
-package spreads.src
-
 import spinal.core._
 import spinal.lib._
 import spreads.src.UnrollLFSR
@@ -14,6 +12,7 @@ case class Channel(S: Int, N: Int) extends Component {
   // x^30 + x^23 + x^2 + x^1 + 1
   val poly0 = List(29,22,1,0)
   val lfsr0 = UnrollLFSR(poly0.toArray, poly0.max+1, 14, 14)
+  lfsr0.io.skip := False
   lfsr0.io.enable := io.enable
   // // x^31 + x^27 + x^23 + x^19 + x^15 + x^11 + x^10 + x^9 + x^7 + x^6 + x^5 + x^3 + x^2 + x^1 + 1
   // val poly1 = List(30,26,22,18,14,10,9,8,6,5,4,2,1,0)

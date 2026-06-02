@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 
-sbt "runMain ReceiverSim"
-gtkwave sim_output/Receiver/test/wave.vcd
+sbt "runMain TopLevelSimAnalog"
+gtkwave sim_output/SpreadSpectrumTopAnalog/test/wave.vcd -o

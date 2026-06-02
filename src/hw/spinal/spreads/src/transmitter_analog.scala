@@ -2,7 +2,7 @@ import spinal.core._
 import spinal.lib._
 import spreads.src.UnrollLFSR
 
-case class Transmitter_Analog(poly: Array[Int]) extends Component {
+case class Transmitter_Analog(poly: List[Int]) extends Component {
   val io = new Bundle {
     val enable = in Bool()
     val data   = in Bool()
@@ -11,6 +11,7 @@ case class Transmitter_Analog(poly: Array[Int]) extends Component {
 
   val lfsr = UnrollLFSR(poly.toArray, poly.max+1, 1, 1)
   lfsr.io.enable := io.enable
+  lfsr.io.skip := False
 
   val latchedData = RegNextWhen(io.data, lfsr.io.flag)
 

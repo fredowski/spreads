@@ -18,6 +18,7 @@ case class UnrollLFSR(poly: Array[Int], m_lfsr: Int, steps: Int, n_out :Int) ext
     val flag  = out Bool()
     val rnd_o = out UInt(n_out bits)
     val skip = in Bool()
+    val state = out Bits(m_lfsr bits)
   }
 
   def step(state: Bits): Bits = {
@@ -26,7 +27,7 @@ case class UnrollLFSR(poly: Array[Int], m_lfsr: Int, steps: Int, n_out :Int) ext
   }
 
   def advance(state: Bits, n:Int): Bits = {
-    (0 until n-1).foldLeft(state)((s,_) => step(s))
+    (0 to n-1).foldLeft(state)((s,_) => step(s))
   }
   
   val sr = Reg(Bits(m_lfsr bits)) init(B(m_lfsr bits, default -> True))
@@ -38,7 +39,8 @@ case class UnrollLFSR(poly: Array[Int], m_lfsr: Int, steps: Int, n_out :Int) ext
       sr := advance(sr, steps)
     }
   }
-
+  
+  io.state := sr
   io.rnd_o := sr(n_out-1 downto 0).asUInt
   io.flag := sr.andR
 }
