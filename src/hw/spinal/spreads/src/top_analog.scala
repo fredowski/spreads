@@ -9,7 +9,7 @@ val decoded  = out Bool()
 val syncd    = out Bool()
   }
 
-  val ngen = Channel(0,10)
+  val ngen = Channel(8,5)
   val tx = Transmitter_Analog(poly)
   val rx = Receiver_Analog(poly.toArray, 10, 14)
 

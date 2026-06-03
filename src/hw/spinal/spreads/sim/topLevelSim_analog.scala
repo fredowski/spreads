@@ -3,39 +3,44 @@ import spinal.core.sim._
 
 object TopLevelSimAnalog extends App {
   val poly = List(9,2)
+  val offset = 154
   val CHIPS = math.pow(2,10).toInt -1
   val txBits = Seq(true, false, true, true, false, false, true, false, true, true, false, true)
 
-  SimConfig.withGhdl.withVcdWave.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly)).doSim { dut =>
-    dut.clockDomain.forkStimulus(period = 10)
-
+  SimConfig.withVerilator.withVcdWave.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly)).doSim { dut =>
+    val period = 10
+    dut.clockDomain.forkStimulus(period = period)
+    // disableSimWave()
     dut.io.txEnable #= false; dut.io.txData #= false
     dut.io.rxEnable #= false;
     dut.clockDomain.waitSampling()
-
+    dut.io.txEnable #= true;
+    dut.clockDomain.waitSampling(offset)
     // begin the lsfrs
-    dut.io.txEnable #= true; dut.io.rxEnable #= true
-    dut.clockDomain.waitSampling(CHIPS*CHIPS*3)
-
+    dut.io.rxEnable #= true
+    // dut.clockDomain.waitSampling(CHIPS*CHIPS*3)
+    var timeout = dut.clockDomain.waitSamplingWhere(CHIPS*CHIPS*11*period)(dut.io.syncd.toBoolean)
+    assert(timeout == false, "No synchronization acquired!")
+    dut.clockDomain.waitSampling(100)
+    // enableSimWave()
     // Begin sending bit sequence
-    val results = for ((bit, idx) <- txBits.zipWithIndex) yield {
-      dut.io.txData #= bit
-      dut.clockDomain.waitSampling(CHIPS)
-
-      val decoded = dut.io.decoded.toBoolean
-      val valid   = dut.io.syncd.toBoolean
-      val ok      = valid && decoded == bit
-      println(f"Bit[$idx%2d]  expected=$bit%-5s  decoded=$decoded%-5s  ${if (ok) "PASS" else "FAIL"}")
-      (bit, decoded, valid)
+    var results = new Array[Boolean](txBits.length)
+    for ((b,i) <- txBits.view.zipWithIndex) {
+      dut.io.txData #= b
+      // dut.clockDomain.waitSampling(CHIPS)
+      dut.clockDomain.waitRisingEdgeWhere(dut.io.syncd.toBoolean)
+      results(i) = dut.io.decoded.toBoolean
     }
 
+    dut.clockDomain.waitRisingEdgeWhere(dut.io.syncd.toBoolean)
+    val fullResults = results.appended(dut.io.decoded.toBoolean).drop(1).zip(txBits)
     dut.io.txEnable #= false; dut.io.rxEnable #= false
     dut.clockDomain.waitSampling(5)
 
-    val passed = results.count { case (exp, dec, v) => v && dec == exp }
+    val passed = fullResults.count { case (rx, tx) => rx == tx }
     println(s"\n=== $passed / ${txBits.length} bits recovered ===")
-    println("Expected: " + results.map { case (e, _, _) => if (e) " " else "▄" }.mkString)
-    println("Decoded:  " + results.map { case (_, d, _) => if (d) " " else "▄" }.mkString)
-    println("Match:    " + results.map { case (e, d, v) => if (v && d == e) "·" else "✗" }.mkString)
+    println("Expected: " + fullResults.map { case (_, tx) => if (tx) " " else "▄" }.mkString)
+    println("Decoded:  " + fullResults.map { case (rx, _) => if (rx) " " else "▄" }.mkString)
+    println("Match:    " + fullResults.map { case (rx, tx) => if (rx == tx) "·" else "✗" }.mkString)
   }
 }

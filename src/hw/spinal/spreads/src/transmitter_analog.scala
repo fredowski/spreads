@@ -16,7 +16,7 @@ case class Transmitter_Analog(poly: List[Int]) extends Component {
   val latchedData = RegNextWhen(io.data, lfsr.io.flag)
 
   val chip = Bool()
-  chip := lfsr.io.rnd_o.asBits(0) ^ latchedData
+  chip := (lfsr.io.rnd_o.asBits(0) ^ latchedData)
   when(chip) {
     io.coded := io.coded.maxValue
   } otherwise {
