@@ -1,5 +1,3 @@
-package spreads.src
-
 import spinal.core._
 
 // example polynomials:

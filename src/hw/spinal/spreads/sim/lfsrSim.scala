@@ -1,9 +1,6 @@
-package spreads.sim
-
-
 import spinal.core._
 import spinal.core.sim._
-import spreads.src.UnrollLFSR
+
 
 //x^10 + x^4 + x^3 + x^1 + 1
 //x^32 + x^22 + x^2 + x^1 + 1

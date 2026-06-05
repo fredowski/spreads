@@ -1,6 +1,5 @@
 import spinal.core._
 import spinal.lib._
-import spreads.src.UnrollLFSR
 
 case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int) extends Component {
   val io = new Bundle {
