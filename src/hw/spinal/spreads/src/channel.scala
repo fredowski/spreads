@@ -3,14 +3,14 @@ import spinal.lib._
 
 case class Channel(S: Int, N: Int) extends Component {
   val io = new Bundle {
-    val enable = in Bool()
-    val i   = in SInt(14 bits)
-    val o  = out SInt(14 bits)
+    val enable = in Bool ()
+    val i = in SInt (14 bits)
+    val o = out SInt (14 bits)
   }
 
   // x^30 + x^23 + x^2 + x^1 + 1
-  val poly0 = List(29,22,1,0)
-  val lfsr0 = UnrollLFSR(poly0.toArray, poly0.max+1, 14, 14)
+  val poly0 = List(29, 22, 1, 0)
+  val lfsr0 = UnrollLFSR(poly0.toArray, poly0.max + 1, 14, 14)
   lfsr0.io.skip := False
   lfsr0.io.enable := io.enable
   // // x^31 + x^27 + x^23 + x^19 + x^15 + x^11 + x^10 + x^9 + x^7 + x^6 + x^5 + x^3 + x^2 + x^1 + 1
@@ -31,10 +31,11 @@ case class Channel(S: Int, N: Int) extends Component {
   // lfsr4.io.enable := io.enable
 
   var X = SInt(17 bits)
-  X = lfsr0.io.rnd_o.asSInt // +^ lfsr1.io.rnd_o.asSInt +^ lfsr2.io.rnd_o.asSInt +^ lfsr3.io.rnd_o.asSInt +^ lfsr4.io.rnd_o.asSInt
-  
+  X =
+    lfsr0.io.rnd_o.asSInt // +^ lfsr1.io.rnd_o.asSInt +^ lfsr2.io.rnd_o.asSInt +^ lfsr3.io.rnd_o.asSInt +^ lfsr4.io.rnd_o.asSInt
+
   io.o := (io.i >> U(S)) +| (X(13 downto 0) >> U(N))
 
-  //this is where I would put my math... IF I HAD ANY
-  //val X = Math.sqrt(-2 * Math.log(lfsr1.io.rnd_o)) * Math.cos(2*Math.PI*lfsr2.io.rnd_o)
+  // this is where I would put my math... IF I HAD ANY
+  // val X = Math.sqrt(-2 * Math.log(lfsr1.io.rnd_o)) * Math.cos(2*Math.PI*lfsr2.io.rnd_o)
 }

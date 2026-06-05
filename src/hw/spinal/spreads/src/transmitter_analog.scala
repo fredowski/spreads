@@ -3,12 +3,12 @@ import spinal.lib._
 
 case class Transmitter_Analog(poly: List[Int]) extends Component {
   val io = new Bundle {
-    val enable = in Bool()
-    val data   = in Bool()
-    val coded  = out SInt(14 bits)
+    val enable = in Bool ()
+    val data = in Bool ()
+    val coded = out SInt (14 bits)
   }
 
-  val lfsr = UnrollLFSR(poly.toArray, poly.max+1, 1, 1)
+  val lfsr = UnrollLFSR(poly.toArray, poly.max + 1, 1, 1)
   lfsr.io.enable := io.enable
   lfsr.io.skip := False
 
