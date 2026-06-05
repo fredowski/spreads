@@ -1,6 +1,7 @@
 import spinal.core._
 
 case class SpreadSpectrumTopAnalog(poly: List[Int]) extends Component {
+  ClockDomain.current.clock.setName("CLOCK_50")
   val io = new Bundle {
 val txEnable = in Bool()
 val txData   = in Bool()
