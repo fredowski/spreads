@@ -26,6 +26,30 @@ brew install verilator openjdk && brew install --cask gtkwave
 
 To setup SpinalHDL, it is advised to use the SpinalHDL [installation guide](https://spinalhdl.github.io/SpinalDoc-RTD/master/SpinalHDL/Getting%20Started/Install%20and%20setup.html).
 
+
+# Directory structure overview
+
+├── modeling
+│   └── *.py
+└── src
+    ├── build.sbt
+    ├── build.sc
+    ├── hw
+    │   └── spinal
+    │       └── spreads
+    │           ├── sim
+    │           └── src
+    ├── project
+    ├── sim_output
+    ├── simulate_with_wave.sh
+    └── target
+
+The `modeling` directory contains all our python3 simulations and testing scripts. 
+
+in `src/spinal/spreads/src` or `src/spinal/spreads/sim` the source and simulation scala files can be found. 
+
+In the following section, we will explain how to start a simple first simulation.
+
 # Simulation 
 
 ## Command line way
@@ -36,12 +60,12 @@ To do this run:
 
 ``` sh
 cd src
-sbt "runMain ReceiverSim"
+sbt "runMain TopLevelSimAnalog"
 ```
 Then view the waveform with:
 
-``` sh
-gtkwave src/sim_output/DSSSReceiver/test/wave.vcd
+``` shg
+gtkwave sim_output/SpreadSpectrumTopAnalog/test/wave.vcd -o
 ```
 
 ## Using script automation
