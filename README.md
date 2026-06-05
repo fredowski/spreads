@@ -28,7 +28,7 @@ To setup SpinalHDL, it is advised to use the SpinalHDL [installation guide](http
 
 
 # Directory structure overview
-
+```
 ├── modeling
 │   └── *.py
 └── src
@@ -43,7 +43,7 @@ To setup SpinalHDL, it is advised to use the SpinalHDL [installation guide](http
     ├── sim_output
     ├── simulate_with_wave.sh
     └── target
-
+```
 The `modeling` directory contains all our python3 simulations and testing scripts. 
 
 in `src/spinal/spreads/src` or `src/spinal/spreads/sim` the source and simulation scala files can be found. 
