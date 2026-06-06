@@ -1,16 +1,192 @@
-import mill._, scalalib._
+//| mvnDeps:
+//| - com.typesafe:config:1.4.3
+import mill._
+import mill.scalalib._
+import mill.api.BuildCtx
 
-val spinalVersion = "1.12.3"
-
-object spreads extends SbtModule {
+trait SpinalModule extends ScalaModule {
   def scalaVersion = "2.13.14"
-  override def millSourcePath = os.pwd
-  def sources = T.sources(
-    millSourcePath / "hw" / "spinal"
+  def simSource = Task.Source(moduleDir / "sim")
+  def sources = Task { super.sources() :+ simSource() }
+  
+  override def mvnDeps = Seq(
+    mvn"com.github.spinalhdl::spinalhdl-core:1.12.3",
+    mvn"com.github.spinalhdl::spinalhdl-lib:1.12.3"
   )
-  def ivyDeps = Agg(
-    ivy"com.github.spinalhdl::spinalhdl-core:$spinalVersion",
-    ivy"com.github.spinalhdl::spinalhdl-lib:$spinalVersion"
-  )
-  def scalacPluginIvyDeps = Agg(ivy"com.github.spinalhdl::spinalhdl-idsl-plugin:$spinalVersion")
+
+  override def scalacPluginMvnDeps = Seq(mvn"com.github.spinalhdl::spinalhdl-idsl-plugin:1.12.3")
+
+  val projectRoot = BuildCtx.workspaceRoot / os.up
+  val scriptDir   = projectRoot / "scripts"
+  val pnrDir      = moduleDir / "pnr"
+  val quartusDir  = projectRoot / "quartus"
+
+  def pinsFile: T[PathRef]       = Task.Source(quartusDir / "pins" / "de1_pin_assignments_minimumio.tcl")
+  def sdcFile: T[PathRef]        = Task.Source(quartusDir / "timings.sdc")
+  def qprojectScript: T[PathRef] = Task.Source(scriptDir / "create_quartus_project_settings.tcl")
+
+  def generateVhdl: T[PathRef] = Task {
+    val name       = moduleDir.last.toString
+    val mainClass  = s"$name.genvhdl"
+    val outputName = s"$name.vhd"
+    val targetDir  = projectRoot 
+    val workDir    = moduleDir / os.up
+    val outputFile = targetDir / outputName
+    val classpath  = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)
+
+    os.proc("java",
+      s"-DspinalTargetDir=$targetDir",
+      "-cp", classpath,
+      mainClass
+    ).call(
+      cwd    = workDir,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+
+    PathRef(outputFile)
+  }
+
+  def generateVerilog: T[PathRef] = Task {
+    val name       = moduleDir.last.toString
+    val mainClass  = s"$name.genverilog"
+    val outputName = s"$name.v"
+    val targetDir = projectRoot / "src" / "sim_output" 
+    val workDir    = moduleDir / os.up
+    val outputFile = targetDir / outputName
+    val classpath  = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)
+
+    os.proc("java",
+      s"-DspinalTargetDir=$targetDir",
+      "-cp", classpath,
+      mainClass
+    ).call(
+      cwd    = workDir,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+
+    PathRef(outputFile)
+  }
+
+  def qproject: T[PathRef] = Task {
+    val name   = moduleDir.last
+    val vhdl   = generateVhdl()
+    val pins   = pinsFile()
+    val sdc    = sdcFile()
+    val script = qprojectScript()
+
+    if (!os.exists(sdc.path))
+      throw new Exception(s"SDC file missing! Expected at: ${sdc.path}")
+    if (!os.exists(pins.path))
+      throw new Exception(s"Pins file missing! Expected at: ${pins.path}")
+
+    println(s"Starting Quartus project generation for: $name")
+
+    os.proc("quartus_sh",
+      "--64bit",
+      "-t", script.path,
+      "-projectname", name,
+      "-vhdlfile",    vhdl.path,
+      "-pinfile",     pins.path,
+      "-sdcfile",     sdc.path
+    ).call(
+      cwd    = Task.dest,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+
+    PathRef(Task.dest)
+  }
+
+  def quartusgui() = Task.Command {
+    val name       = moduleDir.last
+    val projectDir = qproject().path
+    os.proc("quartus", "--64bit", projectDir / s"$name.qpf")
+      .call(cwd = projectDir, stdout = os.Inherit, stderr = os.Inherit)
+  }
+
+  def prog() = Task.Command {
+    val sof = synthesis().path
+    os.proc("quartus_pgm",
+      "--64bit",
+      "-c", "USB-Blaster",
+      "--mode", "jtag",
+      s"--operation=p;$sof"
+    ).call(stdout = os.Inherit, stderr = os.Inherit)
+  }
+
+  def synthesis: T[PathRef] = Task {
+    val name       = moduleDir.last
+    val projectDir = qproject().path
+    os.proc("quartus_sh", "--64bit", "--flow", "compile", projectDir / s"$name.qpf")
+      .call(cwd = projectDir, stdout = os.Inherit, stderr = os.Inherit)
+    PathRef(projectDir / s"$name.sof")
+  }
+
+  def sim: T[PathRef] = Task {
+    val name = moduleDir.last
+    val mainClass = s"$name.TopLevelSimAnalog"
+    val simDir = projectRoot / "src" / "sim_output"
+    val targetDir =  simDir / "simFiles"
+    val cp = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)
+
+    os.proc(
+      "java", 
+      s"-DspinalSimWorkspace=$targetDir", 
+      "-cp", cp, 
+      mainClass
+    ).call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
+
+    val vcdPath = simDir / "SpreadSpectrumTopAnalog" / "test" / "wave.vcd"
+    
+    if (!os.exists(vcdPath)) {
+      throw new Exception(s"VCD file not found at $vcdPath ! Check your component name.")
+    }
+
+    PathRef(vcdPath)
+  }
+
+  def simwave() = Task.Command {
+    val wave = sim().path
+    os.proc("gtkwave", wave)
+      .call(stdout = os.Inherit, stderr = os.Inherit)
+  }
+
+  def tbFile: T[PathRef] = Task.Source(moduleDir / "sim" / s"${moduleDir.last}_tb.vhd")
+
+  def ghdlsim: T[PathRef] = Task {
+    val name = moduleDir.last 
+    val vhd  = generateVhdl().path
+    val tb   = tbFile().path
+    os.proc("ghdl", "-a", "--std=08", vhd, tb)
+      .call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
+    os.proc("ghdl", "-e", "--std=08", s"${name}_tb")
+      .call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
+    os.proc("ghdl", "-r", "--std=08", s"${name}_tb", "--vcd=wave.vcd")
+      .call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
+    PathRef(Task.dest / "wave.vcd")
+  }
+
+  def ghdlsimwave() = Task.Command {
+    val wave = ghdlsim().path
+    os.proc("gtkwave", wave)
+      .call(stdout = os.Inherit, stderr = os.Inherit)
+  }
+}
+
+// object top_simple extends SpinalModule
+// object top_count extends SpinalModule
+// object top_lfsr extends SpinalModule {
+//   def lfsrsim: T[PathRef] = Task {
+//     val name = moduleDir.last
+//     val cp   = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)
+//     os.proc("java", "-cp", cp, s"$name.lfsr_sim")
+//       .call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
+//     PathRef(Task.dest / "lfsr" / "test" / "wave.vcd")
+//   }
+// }
+
+object spreads extends SpinalModule {
+  override def moduleDir = super.moduleDir / os.up / "hw" / "spinal" / "spreads"
 }
