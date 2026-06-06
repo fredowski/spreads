@@ -83,6 +83,13 @@ For a Makefile target overview, see:
 
 Generated sources land in `src/sim_output/SpreadSpectrumTopAnalog/rtl/*.v(hd)`, simulation waveforms in `src/sim_output/SpreadSpectrumTopAnalog/test/*.vcd`.
 
+### Example Makefile usage
+
+```
+cd src
+make sim
+```
+
 ---
 
 ## Mill
