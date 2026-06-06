@@ -1,3 +1,5 @@
+package spreads
+
 import spinal.core._
 
 case class SpreadSpectrumTopAnalog(poly: List[Int]) extends Component {
