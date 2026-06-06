@@ -58,43 +58,57 @@ In the following section, we will explain how to start a simple first simulation
 
 # Building & Simulation
 
+## Build System
+
+This project uses Mill as a build system. Mill is already setup for this repository with the `millw` wrapper. You do not have to install it locally.
+
+## Makefile 
+
+We try to avoid interacting with Mill directly, as its auto-completion can give lots of results, when few would suffice, and seems quite slow. 
+For this, we wrote a simple `Makefile`. The Makefile lets us interact with all the most needed features. 
+
+For a Makefile target overview, see:
+
+| Target     | Description                                              |
+|------------|----------------------------------------------------------|
+| `gen`      | Generate Verilog sources from SpinalHDL                  |
+| `gen-vhd`  | Generate VHDL sources from SpinalHDL                     |
+| `sim`      | Run simulation, produces a VCD waveform file             |
+| `wave`     | Open existing VCD waveform in GTKWave                    |
+| `simwave`  | Run simulation then immediately open GTKWave             |
+| `syn`      | Synthesize and place-and-route with Quartus              |
+| `prog`     | Program the connected FPGA over JTAG (USB-Blaster)       |
+| `gui`      | Open the project in the Quartus GUI                      |
+| `clean`    | Clear all Mill build artifacts                           |
+
+Generated sources land in `src/sim_output/SpreadSpectrumTopAnalog/rtl/*.v(hd)`, simulation waveforms in `src/sim_output/SpreadSpectrumTopAnalog/test/*.vcd`.
+
+---
+
 ## Mill
 
-Mill is already setup for this repository with the `millw` wrapper. You do not have to install it locally.
-
-### Using Mill
-
-```sh
-cd src
-./mill spreads.__
-```
-In this case, `spreads` is our project name. Then follow with the task you want to perform, for example:
-
-```sh
-./mill spreads.generateVerilog
-```
+If Mill is used instead of the Makefile, this README section should give a decent overview us Mill usage.
 
 ### Mill Auto-completion
 
-Ut is advised to install Mills auto-completion features. 
+If Mill is used instead of the Makefile, it is advised to install Mills auto-completion features. 
 Use this command and then reload your shell:
 `./mill mill.tabcomplete/install`
 
 
 ### All Mill Tasks listed
 
----
 
 This is a list of all possible Mill tasks for this project
 
-#### Build tasks
-
 All tasks are run from the repo root as `./mill spreads.<task>`.
+
+#### Generation
 
 | Task | Description |
 |---|---|
-| `./mill spreads.generateVhdl` | Compile SpinalHDL and generate `spreads.vhd` to `src/sim_output/` |
-| `./mill spreads.generateVerilog` | Compile SpinalHDL and generate `spreads.v` to `src/sim_output/` |
+| `./mill spreads.generateVhdl` | Compile SpinalHDL and generate `spreads.vhd` to `src/sim_output/SpreadSpectrumTopAnalog/rtl/` |
+| `./mill spreads.generateVerilog` | Compile SpinalHDL and generate `spreads.v` to `src/sim_output/SpreadSpectrumTopAnalog/rtl/` |
 
 #### Simulation
 
@@ -115,15 +129,5 @@ All tasks are run from the repo root as `./mill spreads.<task>`.
 | `./mill spreads.prog` | Program the FPGA over JTAG |
 
 ---
-
-## Using script automation
-
-For ease of use a simple script has been added that combines the commands. 
-Use:
-
-``` sh
-cd src
-./simulate_with_wave.sh
-```
 
  
