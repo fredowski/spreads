@@ -1,12 +1,14 @@
 # Spread Spectrum SpinalHDL Project
 
-This is a student spread spectrum SpinalHDL project.
-(When the project is further advanced, we should add some more project description here)
-This README will go over how to setup and use the project, the SpinalHDL setup will not be addressed by this README.
+This is a Electrical Engineerig Master student project. The goals is to achieve Spread Spectrum communication on an FPGA, using the SpinalHDL language and a DE2 Altera board. The project includes artificual noise generation to simulate realistic environments and is based on LSFRs. Currently, no FFT usage is planned.
+
+This README will go over how to setup and use the project.
+
+---
 
 # SpinalHDL setup
 
-For simulation, installing GTKWave and Verilator is advised/needed. Verialtor also depends on a modern JDK. Choose your package manager and install the depedencies:
+For simulation, installing GTKWave and Verilator is advised/needed. Verilator also depends on a modern JDK. Choose your package manager and install the dependencies:
 
 ## apt
 ```bash
@@ -26,8 +28,10 @@ brew install verilator openjdk && brew install --cask gtkwave
 
 To setup SpinalHDL, it is advised to use the SpinalHDL [installation guide](https://spinalhdl.github.io/SpinalDoc-RTD/master/SpinalHDL/Getting%20Started/Install%20and%20setup.html).
 
+--- 
 
 # Directory structure overview
+
 ```
 ├── modeling
 │   └── *.py
@@ -49,6 +53,8 @@ The `modeling` directory contains all our python3 simulations and testing script
 in `src/spinal/spreads/src` or `src/spinal/spreads/sim` the source and simulation scala files can be found. 
 
 In the following section, we will explain how to start a simple first simulation.
+
+---
 
 # Building & Simulation
 
