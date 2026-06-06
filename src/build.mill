@@ -102,8 +102,8 @@ trait SpinalModule extends ScalaModule {
 
   def quartusgui() = Task.Command {
     val name       = moduleDir.last
-    val projectDir = qproject().path
-    os.proc("quartus", "--64bit", projectDir / s"$name.qpf")
+    val projectDir = quartusDir
+    os.proc("quartus", "--64bit", projectDir / "spread_quartus.qpf")
       .call(cwd = projectDir, stdout = os.Inherit, stderr = os.Inherit)
   }
 
@@ -119,9 +119,19 @@ trait SpinalModule extends ScalaModule {
 
   def synthesis: T[PathRef] = Task {
     val name       = moduleDir.last
-    val projectDir = qproject().path
-    os.proc("quartus_sh", "--64bit", "--flow", "compile", projectDir / s"$name.qpf")
+    val projectDir = quartusDir
+    os.proc("quartus_sh", "--64bit", "--flow", "compile", quartusDir / "spread_quartus.qpf")
       .call(cwd = projectDir, stdout = os.Inherit, stderr = os.Inherit)
+    // Try printing out the quartus generated summaries, so we don't have to open GUI for PnR results
+    val fitSummary = quartusDir / "output_files" / "spread_quartus.fit.summary"
+    val mapSummary = quartusDir / "output_files" / "spread_quartus.map.summary"
+    println("\n")
+    println("-----------")
+    if (os.exists(mapSummary)) println(os.read(mapSummary))
+    println("\n")
+    println("-----------")
+    if (os.exists(fitSummary)) println(os.read(fitSummary))
+    println("-----------")    
     PathRef(projectDir / s"$name.sof")
   }
 
