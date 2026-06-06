@@ -28,6 +28,7 @@ simwave:
 	$(MILL) $(MODULE).simwave
 
 syn:
+	@test -f src/sim_output/SpreadSpectrumTopAnalog/rtl/SpreadSpectrumTopAnalog.v || $(MAKE) gen
 	$(MILL) $(MODULE).synthesis
 
 prog:
