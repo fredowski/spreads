@@ -17,6 +17,7 @@ trait SpinalModule extends ScalaModule {
 
   override def scalacPluginMvnDeps = Seq(mvn"com.github.spinalhdl::spinalhdl-idsl-plugin:1.12.3")
 
+  val sim_name = "SpreadSpectrumTopAnalog"
   val projectRoot = BuildCtx.workspaceRoot / os.up
   val scriptDir   = projectRoot / "scripts"
   val pnrDir      = moduleDir / "pnr"
@@ -30,7 +31,7 @@ trait SpinalModule extends ScalaModule {
     val name       = moduleDir.last.toString
     val mainClass  = s"$name.genvhdl"
     val outputName = s"$name.vhd"
-    val targetDir = projectRoot / "src" / "sim_output" 
+    val targetDir = projectRoot / "src" / "sim_output" / sim_name / "rtl" 
     val workDir    = moduleDir / os.up
     val outputFile = targetDir / outputName
     val classpath  = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)
@@ -52,7 +53,7 @@ trait SpinalModule extends ScalaModule {
     val name       = moduleDir.last.toString
     val mainClass  = s"$name.genverilog"
     val outputName = s"$name.v"
-    val targetDir = projectRoot / "src" / "sim_output" 
+    val targetDir = projectRoot / "src" / "sim_output" / sim_name / "rtl" 
     val workDir    = moduleDir / os.up
     val outputFile = targetDir / outputName
     val classpath  = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)
@@ -147,19 +148,14 @@ trait SpinalModule extends ScalaModule {
       s"-DspinalSimWorkspace=$targetDir", 
       "-cp", cp, 
       mainClass
-    ).call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
+    ).call(cwd = projectRoot / "src", stdout = os.Inherit, stderr = os.Inherit)
 
-    val vcdPath = simDir / "SpreadSpectrumTopAnalog" / "test" / "wave.vcd"
-    
-    if (!os.exists(vcdPath)) {
-      throw new Exception(s"VCD file not found at $vcdPath ! Check your component name.")
-    }
-
-    PathRef(vcdPath)
+    PathRef(Task.dest)
   }
 
   def simwave() = Task.Command {
-    val wave = sim().path
+    val simDir = projectRoot / "src" / "sim_output"
+    val wave = simDir / sim_name / "test" / "wave.vcd"
     os.proc("gtkwave", wave)
       .call(stdout = os.Inherit, stderr = os.Inherit)
   }
