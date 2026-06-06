@@ -50,11 +50,9 @@ in `src/spinal/spreads/src` or `src/spinal/spreads/sim` the source and simulatio
 
 In the following section, we will explain how to start a simple first simulation.
 
-# Simulation 
+# Building & Simulation
 
-## Command line way
-
-### Mill
+## Mill
 
 Mill is already setup for this repository with the `millw` wrapper. You do not have to install it locally.
 
@@ -70,12 +68,47 @@ In this case, `spreads` is our project name. Then follow with the task you want 
 ./mill spreads.generateVerilog
 ```
 
-#### Mill Auto-completion
+### Mill Auto-completion
 
 Ut is advised to install Mills auto-completion features. 
 Use this command and then reload your shell:
 `./mill mill.tabcomplete/install`
 
+
+### All Mill Tasks listed
+
+---
+
+This is a list of all possible Mill tasks for this project
+
+#### Build tasks
+
+All tasks are run from the repo root as `./mill spreads.<task>`.
+
+| Task | Description |
+|---|---|
+| `./mill spreads.generateVhdl` | Compile SpinalHDL and generate `spreads.vhd` to `src/sim_output/` |
+| `./mill spreads.generateVerilog` | Compile SpinalHDL and generate `spreads.v` to `src/sim_output/` |
+
+#### Simulation
+
+| Task | Description |
+|---|---|
+| `./mill spreads.sim` | Run the SpinalSim `TopLevelSimAnalog` simulation, produce `wave.vcd` |
+| `./mill spreads.simwave` | Run simulation and open the result in GTKWave |
+| `./mill spreads.ghdlsim` | Analyse + elaborate + run the VHDL testbench with GHDL, produce `wave.vcd` |
+| `./mill spreads.ghdlsimwave` | Same as above, then open the result in GTKWave |
+
+#### Quartus
+
+| Task | Description |
+|---|---|
+| `./mill spreads.qproject` | Generate a Quartus project from the VHDL output and pin/SDC files |
+| `./mill spreads.synthesis` | Run a full Quartus compilation (produces `.sof`) |
+| `./mill spreads.quartusgui` | Open the generated project in the Quartus GUI |
+| `./mill spreads.prog` | Program the FPGA over JTAG |
+
+---
 
 ## Using script automation
 
