@@ -30,7 +30,7 @@ trait SpinalModule extends ScalaModule {
     val name       = moduleDir.last.toString
     val mainClass  = s"$name.genvhdl"
     val outputName = s"$name.vhd"
-    val targetDir  = projectRoot 
+    val targetDir = projectRoot / "src" / "sim_output" 
     val workDir    = moduleDir / os.up
     val outputFile = targetDir / outputName
     val classpath  = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)

@@ -38,3 +38,11 @@ object genverilog extends App {
     targetDirectory = target
   ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2)))
 }
+
+object genvhdl extends App {
+  val target = sys.props.getOrElse("spinalTargetDir", "sim_output")
+
+  SpinalConfig(
+    targetDirectory = target
+  ).generateVhdl(SpreadSpectrumTopAnalog(List(9, 2)))
+}
