@@ -3,6 +3,7 @@
 *.log
 tmp/
 src/target/
+src/out/
 src/project/target/
 src/project/project/
 src/project
