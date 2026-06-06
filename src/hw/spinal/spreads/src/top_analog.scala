@@ -29,3 +29,12 @@ case class SpreadSpectrumTopAnalog(poly: List[Int]) extends Component {
   io.decoded := rx.io.data
   io.syncd := rx.io.syncd
 }
+
+
+object genverilog extends App {
+  val target = sys.props.getOrElse("spinalTargetDir", "sim_output")
+
+  SpinalConfig(
+    targetDirectory = target
+  ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2)))
+}
