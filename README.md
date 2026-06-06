@@ -53,20 +53,29 @@ In the following section, we will explain how to start a simple first simulation
 # Simulation 
 
 ## Command line way
-Using sbt, we can create Verilog from SpinalHDL and simulate the receiver.
-Verilator will then create a [Value Change Dump](https://en.wikipedia.org/wiki/Value_change_dump) file (VCD).
 
-To do this run:
+### Mill
 
-``` sh
+Mill is already setup for this repository with the `millw` wrapper. You do not have to install it locally.
+
+### Using Mill
+
+```sh
 cd src
-sbt "runMain TopLevelSimAnalog"
+./mill spreads.__
 ```
-Then view the waveform with:
+In this case, `spreads` is our project name. Then follow with the task you want to perform, for example:
 
-``` shg
-gtkwave sim_output/SpreadSpectrumTopAnalog/test/wave.vcd -o
+```sh
+./mill spreads.generateVerilog
 ```
+
+#### Mill Auto-completion
+
+Ut is advised to install Mills auto-completion features. 
+Use this command and then reload your shell:
+`./mill mill.tabcomplete/install`
+
 
 ## Using script automation
 
