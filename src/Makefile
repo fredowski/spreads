@@ -43,6 +43,6 @@ clean:
 help:
 	@echo "Targets: gen, gen-vhd, sim, wave, simwave, syn, prog, gui, clean"
 
-.PHONY: gen gen-vhd sim wave syn prog gui help
+.PHONY: gen gen-vhd sim wave syn prog gui help clean
 
 # end
