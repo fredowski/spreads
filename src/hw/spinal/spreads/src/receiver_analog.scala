@@ -28,7 +28,7 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
 
   // TEST FOR MAX AMOUNT OF ACCS AND LFSRS
   // export JAVA_OPTS="-Xmx8g -Xss256m" needed
-  val AMOUNT_PARALLEL = 500  
+  val AMOUNT_PARALLEL = 170  
   val accs  = Vec(Reg(SInt((n_adc + m_lfsr) bits)) init(0), AMOUNT_PARALLEL)
   // We have to create different steps, else Quartus optimizes our code away because its all the same lfsr 
   //val lfsr2 =  UnrollLFSR(poly, poly.max+1, 1, 1)
