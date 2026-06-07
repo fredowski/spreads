@@ -28,27 +28,22 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
 
   // TEST FOR MAX AMOUNT OF ACCS AND LFSRS
   // export JAVA_OPTS="-Xmx8g -Xss256m" needed
-  val AMOUNT_PARALLEL = 100  
+  val AMOUNT_PARALLEL = 500  
   val accs  = Vec(Reg(SInt((n_adc + m_lfsr) bits)) init(0), AMOUNT_PARALLEL)
   // We have to create different steps, else Quartus optimizes our code away because its all the same lfsr 
-  var lfsrs = List[UnrollLFSR]()
-  for (i <- 0 until AMOUNT_PARALLEL) {
-    lfsrs = lfsrs :+ UnrollLFSR(poly, poly.max+1, i+1, 1)
-  }
+  //val lfsr2 =  UnrollLFSR(poly, poly.max+1, 1, 1)
   val signBits = accs.map(accu_i => accu_i.msb) // get all sign bits
   val xorAll   = signBits.reduce(_ ^ _) // XOR them all!
   io.dont_optimize_me_pls := xorAll
-
-  // loop to simulate space usage of lfsrs on chip
   for (i <- 0 until AMOUNT_PARALLEL) {
-  lfsrs(i).io.enable := io.enable
-  lfsrs(i).io.skip   := False
-  when(lfsrs(i).io.rnd_o(0) === False) {
-    accs(i) := accs(i) +| io.signal
-  } otherwise {
-    accs(i) := accs(i) -| io.signal
+    val index = S(i, n_adc bits)
+    val random_value = io.signal ^ index
+    when(lfsr.io.rnd_o(0) === False) {
+      accs(i) := accs(i) +| random_value
+    } otherwise {
+      accs(i) := accs(i) -| random_value
+    }
   }
-}
 
   // TODO general method using scala fold or similar
   when(lfsr.io.rnd_o(0) === False) {
