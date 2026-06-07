@@ -10,6 +10,7 @@ case class SpreadSpectrumTopAnalog(poly: List[Int]) extends Component {
     val rxEnable = in Bool ()
     val decoded = out Bool ()
     val syncd = out Bool ()
+    val very_important = out Bool()
   }
 
   val ngen = Channel(8, 5)
@@ -18,6 +19,7 @@ case class SpreadSpectrumTopAnalog(poly: List[Int]) extends Component {
 
   ngen.io.enable := io.txEnable
 
+  io.very_important := rx.io.dont_optimize_me_pls
   tx.io.enable := io.txEnable
   tx.io.data := io.txData
 

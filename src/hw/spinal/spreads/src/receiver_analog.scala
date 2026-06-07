@@ -10,6 +10,7 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
     val signal = in SInt (n_adc bits)
     val data = out Bool ()
     val syncd = out Bool ()
+    val dont_optimize_me_pls = out Bool ()
   }
   val chips = scala.math.pow(2, m_lfsr).toInt - 1
 
@@ -24,6 +25,30 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
   // three parallel correlators
   var acc = SInt((n_adc + m_lfsr) bits)
   var accReg = RegNextWhen(acc, io.enable) init (0)
+
+  // TEST FOR MAX AMOUNT OF ACCS AND LFSRS
+  // export JAVA_OPTS="-Xmx8g -Xss256m" needed
+  val AMOUNT_PARALLEL = chips  
+  val accs  = Vec(Reg(SInt((n_adc + m_lfsr) bits)) init(0), AMOUNT_PARALLEL)
+  // We have to create different steps, else Quartus optimizes our code away because its all the same lfsr 
+  var lfsrs = List[UnrollLFSR]()
+  for (i <- 0 until AMOUNT_PARALLEL) {
+    lfsrs = lfsrs :+ UnrollLFSR(poly, poly.max+1, i+1, 1)
+  }
+  val signBits = accs.map(accu_i => accu_i.msb) // get all sign bits
+  val xorAll   = signBits.reduce(_ ^ _) // XOR them all!
+  io.dont_optimize_me_pls := xorAll
+
+  // loop to simulate space usage of lfsrs on chip
+  for (i <- 0 until AMOUNT_PARALLEL) {
+  lfsrs(i).io.enable := io.enable
+  lfsrs(i).io.skip   := False
+  when(lfsrs(i).io.rnd_o(0) === False) {
+    accs(i) := accs(i) +| io.signal
+  } otherwise {
+    accs(i) := accs(i) -| io.signal
+  }
+}
 
   // TODO general method using scala fold or similar
   when(lfsr.io.rnd_o(0) === False) {
