@@ -119,6 +119,7 @@ trait SpinalModule extends ScalaModule {
   }
 
   def synthesis: T[PathRef] = Task {
+    val tmp = generateVerilog()
     val name       = moduleDir.last
     val projectDir = quartusDir
     os.proc("quartus_sh", "--64bit", "--flow", "compile", quartusDir / "spread_quartus.qpf")
