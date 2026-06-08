@@ -134,7 +134,7 @@ trait SpinalModule extends ScalaModule {
     println("-----------")
     if (os.exists(fitSummary)) println(os.read(fitSummary))
     println("-----------")    
-    PathRef(projectDir / s"$name.sof")
+    PathRef(quartusDir / "output_files/spread_quartus.sof")
   }
 
   def sim: T[PathRef] = Task {
