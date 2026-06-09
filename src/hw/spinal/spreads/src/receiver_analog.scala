@@ -1,6 +1,7 @@
 package spreads
 
 import spinal.core._
+import spinal.core.sim._
 import spinal.lib._
 
 case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
@@ -32,11 +33,11 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
     acc := accReg -| io.signal
   }
 
-  var maxReg = Reg(UInt((n_adc + m_lfsr) bits)) init (0)
-  var offsetReg = Reg(UInt(m_lfsr bits)) init (0)
+  var maxReg = Reg(UInt((n_adc + m_lfsr) bits)) init (0) simPublic
+  var offsetReg = Reg(UInt(m_lfsr bits)) init(0) simPublic
 
-  var accCount = Counter(1 to chips)
-  var offsetCount = Counter((m_lfsr) bits)
+  var accCount = Counter(1 to chips) init(1)
+  var offsetCount = Counter((m_lfsr) bits) init(0)
 
   when(io.enable) {
     accCount.increment()
@@ -48,6 +49,7 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
 
   val state = Reg(TrackState()) init (TrackState.sSearch)
   state.setName("ReceiverState")
+
   switch(state) {
     is(TrackState.sSearch) {
       // store result of iteration

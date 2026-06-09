@@ -12,7 +12,7 @@ case class SpreadSpectrumTopAnalog(poly: List[Int]) extends Component {
     val syncd = out Bool ()
   }
 
-  val ngen = Channel(8, 5)
+  val ngen = Channel(4, 0)
   val tx = Transmitter_Analog(poly)
   val rx = Receiver_Analog(poly.toArray, 10, 14)
 
