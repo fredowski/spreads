@@ -18,7 +18,7 @@ object TopLevelSimAnalog extends App {
   
   compiled.doSim { dut =>
     // SUPER IMPORTANT, else this run will produce an absolutely gigantic vcd file
-    // disableSimWave()
+    disableSimWave()
     dut.clockDomain.forkSimSpeedPrinter(1)
 
     val period = 10
