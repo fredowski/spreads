@@ -5,34 +5,38 @@ import spinal.core.sim._
 
 object TopLevelSimAnalog extends App {
   val poly = List(9,2)
-  val symbols_to_integrate = 3
-  // val offset = 456
+  val symbols_to_integrate = 1
+  // 6dB reduced signal power per right shift (half level = 1/4 power = -6dB)
+  // Not sure what equivalent noise power of current channel is, somewhere between 0 and -6 dB probably? 
+  // 5 shifts is somewhere between -24 and -30 dB SNR then
+  // performance with correlation over multiple symbols seems to behave somewhat like the python model
+  // TODO: Do actual statistics instead of guessing
+  val signal_attenuation_shifts = 4
+  val compiled = SimConfig.withVerilator.withVcdWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly, symbols_to_integrate-1, signal_attenuation_shifts))
+  
   val CHIPS = math.pow(2,10).toInt -1
   val txBits = Seq(true, false, true, true, false, false, true, false, true, true, false, true)
   var successes = 0
   var iterations = 0
   val rng = new scala.util.Random(0)
-  // val offsets = Seq.fill(100)(rng.nextInt(1023))
-  val compiled = SimConfig.withVerilator.withVcdWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly, symbols_to_integrate-1))
-  // 
-  
+  val offsets = 1 to 1023 // Seq.fill(100)(rng.nextInt(1023))
   compiled.doSim { dut =>
     // SUPER IMPORTANT, else this run will produce an absolutely gigantic vcd file
-    disableSimWave()
+    // disableSimWave()
     dut.clockDomain.forkSimSpeedPrinter(1)
 
     val period = 10
     dut.clockDomain.forkStimulus(period = period)
 
-    for (offset <- 1 to 1023) {
+    for (offset <- offsets) {
       //perform reset without spawning new thread
-      dut.clockDomain.assertReset()
-      dut.clockDomain.fallingEdge()
-      sleep(25)
-      dut.clockDomain.deassertReset()
-      sleep(25)
       dut.io.txEnable #= false; dut.io.txData #= false
       dut.io.rxEnable #= false;
+      dut.clockDomain.assertReset()
+      dut.clockDomain.fallingEdge()
+      dut.clockDomain.waitRisingEdge(25)
+      dut.clockDomain.deassertReset()
+      dut.clockDomain.waitRisingEdge(25)
       dut.clockDomain.waitSampling()
       dut.io.txEnable #= true;
       dut.clockDomain.waitSampling(offset)
@@ -70,9 +74,9 @@ object TopLevelSimAnalog extends App {
         println("Decoded:  " + fullResults.map { case (rx, _) => if (rx) " " else "▄" }.mkString)
         println("Match:    " + fullResults.map { case (rx, tx) => if (rx == tx) "·" else "✗" }.mkString)
       }
+
       iterations+=1
       println("Code acquisition rate: " + successes.toDouble/iterations)
     }
-    
   }
 }
