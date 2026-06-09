@@ -5,25 +5,26 @@ import spinal.core.sim._
 
 object TopLevelSimAnalog extends App {
   val poly = List(9,2)
+  val symbols_to_integrate = 3
   // val offset = 456
   val CHIPS = math.pow(2,10).toInt -1
   val txBits = Seq(true, false, true, true, false, false, true, false, true, true, false, true)
   var successes = 0
   var iterations = 0
   val rng = new scala.util.Random(0)
-  val offsets = Seq.fill(100)(rng.nextInt(1023))
-  val compiled = SimConfig.withVerilator.withVcdWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly))
+  // val offsets = Seq.fill(100)(rng.nextInt(1023))
+  val compiled = SimConfig.withVerilator.withVcdWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly, symbols_to_integrate-1))
   // 
   
   compiled.doSim { dut =>
     // SUPER IMPORTANT, else this run will produce an absolutely gigantic vcd file
-    disableSimWave()
+    // disableSimWave()
     dut.clockDomain.forkSimSpeedPrinter(1)
 
     val period = 10
     dut.clockDomain.forkStimulus(period = period)
 
-    for (offset <- offsets) {
+    for (offset <- 1 to 1023) {
       //perform reset without spawning new thread
       dut.clockDomain.assertReset()
       dut.clockDomain.fallingEdge()

@@ -4,7 +4,7 @@ import spinal.core._
 import spinal.core.sim._
 import spinal.lib._
 
-case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
+case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrator: Int)
     extends Component {
   val io = new Bundle {
     val enable = in Bool ()
@@ -33,12 +33,16 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
     acc := accReg -| io.signal
   }
 
-  var maxReg = Reg(UInt((n_adc + m_lfsr) bits)) init (0) simPublic
+  var maxReg = Reg(UInt((n_adc + m_lfsr + n_integrator) bits)) init (0) simPublic
   var offsetReg = Reg(UInt(m_lfsr bits)) init(0) simPublic
 
   var accCount = Counter(1 to chips) init(1)
   var offsetCount = Counter((m_lfsr) bits) init(0)
+  var symbolCount = Counter(0 to n_integrator) init(0)
 
+  var multiCorr = UInt((n_adc + m_lfsr + n_integrator) bits)
+  var multiCorrReg = RegNext(multiCorr) init (0)
+  multiCorr := multiCorrReg
   when(io.enable) {
     accCount.increment()
   }
@@ -54,13 +58,19 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int)
     is(TrackState.sSearch) {
       // store result of iteration
       when(lfsr.io.flag) {
+        symbolCount.increment()
         acc := 0
-        offsetCount.increment()
-        when(accReg.abs > maxReg) {
-          maxReg := accReg.abs
-          offsetReg := accCount
+        multiCorr := multiCorrReg +| accReg.abs
+        when(symbolCount.willOverflow) {
+          multiCorrReg := 0
+          offsetCount.increment()
+          when(multiCorr > maxReg) {
+            maxReg := multiCorr
+            offsetReg := accCount
+          }
+          lfsr.io.skip := True
         }
-        lfsr.io.skip := True
+        
       }
 
       // tried all offsets

@@ -2,7 +2,7 @@ package spreads
 
 import spinal.core._
 
-case class SpreadSpectrumTopAnalog(poly: List[Int]) extends Component {
+case class SpreadSpectrumTopAnalog(poly: List[Int], symbols_to_integrate: Int) extends Component {
   ClockDomain.current.clock.setName("CLOCK_50")
   val io = new Bundle {
     val txEnable = in Bool ()
@@ -14,7 +14,7 @@ case class SpreadSpectrumTopAnalog(poly: List[Int]) extends Component {
 
   val ngen = Channel(4, 0)
   val tx = Transmitter_Analog(poly)
-  val rx = Receiver_Analog(poly.toArray, 10, 14)
+  val rx = Receiver_Analog(poly.toArray, 10, 14, symbols_to_integrate)
 
   ngen.io.enable := io.txEnable
 
@@ -36,7 +36,7 @@ object genverilog extends App {
 
   SpinalConfig(
     targetDirectory = target
-  ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2)))
+  ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2), 10))
 }
 
 object genvhdl extends App {
@@ -44,5 +44,5 @@ object genvhdl extends App {
 
   SpinalConfig(
     targetDirectory = target
-  ).generateVhdl(SpreadSpectrumTopAnalog(List(9, 2)))
+  ).generateVhdl(SpreadSpectrumTopAnalog(List(9, 2), 10))
 }
