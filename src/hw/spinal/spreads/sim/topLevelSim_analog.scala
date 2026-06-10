@@ -15,14 +15,15 @@ object TopLevelSimAnalog extends App {
   val compiled = SimConfig.withVerilator.withVcdWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly, symbols_to_integrate-1, signal_attenuation_shifts))
   
   val CHIPS = math.pow(2,10).toInt -1
-  val txBits = Seq(true, false, true, true, false, false, true, false, true, true, false, true)
+  
   var successes = 0
   var iterations = 0
   val rng = new scala.util.Random(0)
+  val txBits = Seq.fill(10000)(rng.nextBoolean())
   val offsets = 1 to 1023 // Seq.fill(100)(rng.nextInt(1023))
   compiled.doSim { dut =>
     // SUPER IMPORTANT, else this run will produce an absolutely gigantic vcd file
-    // disableSimWave()
+    disableSimWave()
     dut.clockDomain.forkSimSpeedPrinter(1)
 
     val period = 10
@@ -45,10 +46,10 @@ object TopLevelSimAnalog extends App {
       // dut.clockDomain.waitSampling(CHIPS*CHIPS*3)
       var timeout = dut.clockDomain.waitSamplingWhere(CHIPS*CHIPS*11*period)(dut.io.syncd.toBoolean)
       assert(timeout == false, "No synchronization acquired!")
-      var detected_offset = (CHIPS - dut.rx.offsetReg.toInt + 1)
+      var detected_offset = (CHIPS - dut.rx.offsetReg.toInt + 3) % CHIPS
       println("Transmitted signal phase offset: " + offset)
       println("Signal detected at phase offset: " + detected_offset)
-      println("MaxReg value: " + dut.rx.maxReg.toInt)
+      // println("MaxReg value: " + dut.rx.maxReg.toInt)
       if (offset == detected_offset) successes+=1
       // assert(offset == detected_offset, "Code acquisition not successful")
       dut.clockDomain.waitSampling(100)
@@ -70,9 +71,9 @@ object TopLevelSimAnalog extends App {
       if (offset == detected_offset) {
         val passed = fullResults.count { case (rx, tx) => rx == tx }
         println(s"\n=== $passed / ${txBits.length} bits recovered ===")
-        println("Expected: " + fullResults.map { case (_, tx) => if (tx) " " else "▄" }.mkString)
-        println("Decoded:  " + fullResults.map { case (rx, _) => if (rx) " " else "▄" }.mkString)
-        println("Match:    " + fullResults.map { case (rx, tx) => if (rx == tx) "·" else "✗" }.mkString)
+        // println("Expected: " + fullResults.map { case (_, tx) => if (tx) " " else "▄" }.mkString)
+        // println("Decoded:  " + fullResults.map { case (rx, _) => if (rx) " " else "▄" }.mkString)
+        // println("Match:    " + fullResults.map { case (rx, tx) => if (rx == tx) "·" else "✗" }.mkString)
       }
 
       iterations+=1
