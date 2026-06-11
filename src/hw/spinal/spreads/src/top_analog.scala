@@ -32,11 +32,26 @@ case class SpreadSpectrumTopAnalog(poly: List[Int], symbols_to_integrate: Int, s
 
 
 object genverilog extends App {
+  val target_name = args.headOption.getOrElse("top")
   val target = sys.props.getOrElse("spinalTargetDir", "sim_output")
-
-  SpinalConfig(
-    targetDirectory = target
-  ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2), 0, 3))
+  if (target_name == "top" || target_name == "SpreadSpectrumTopAnalog"){
+    SpinalConfig(
+      targetDirectory = target
+    ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2), 0, 3))
+  } else if (target_name == "Transmitter_Analog") {
+    SpinalConfig(
+      targetDirectory = target
+    ).generateVerilog(Transmitter_Analog(List(9, 2)))    
+  } else if (target_name == "Receiver_Analog") {
+    SpinalConfig(
+      targetDirectory = target
+    ).generateVerilog(Receiver_Analog(List(9, 2).toArray, 10, 14, 0))
+  } else if (target_name == "Channel") {
+    SpinalConfig(
+      targetDirectory = target
+    ).generateVerilog(Channel(4,0))
+    
+  }
 }
 
 object genvhdl extends App {
