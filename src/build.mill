@@ -49,11 +49,11 @@ trait SpinalModule extends ScalaModule {
     PathRef(outputFile)
   }
 
-  def generateVerilog: T[PathRef] = Task {
+  def generateVerilog(topLevel: String = sim_name) = Task.Command {
     val name       = moduleDir.last.toString
     val mainClass  = s"$name.genverilog"
     val outputName = s"$name.v"
-    val targetDir = projectRoot / "src" / "sim_output" / sim_name / "rtl" 
+    val targetDir = projectRoot / "src" / "sim_output" / topLevel / "rtl" 
     val workDir    = moduleDir / os.up
     val outputFile = targetDir / outputName
     val classpath  = runClasspath().map(_.path).mkString(java.io.File.pathSeparator)
@@ -61,7 +61,8 @@ trait SpinalModule extends ScalaModule {
     os.proc("java",
       s"-DspinalTargetDir=$targetDir",
       "-cp", classpath,
-      mainClass
+      mainClass,
+      topLevel
     ).call(
       cwd    = workDir,
       stdout = os.Inherit,
