@@ -38,18 +38,18 @@ object genverilog extends App {
     SpinalConfig(
       targetDirectory = target
     ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2), 0, 3))
-  } else if (target_name == "Transmitter_Analog") {
+  } else if (target_name == "tx_top") {
     SpinalConfig(
       targetDirectory = target
-    ).generateVerilog(Transmitter_Analog(List(9, 2)))    
-  } else if (target_name == "Receiver_Analog") {
+    ).generateVerilog(tx_top(List(9, 2)))    
+  } else if (target_name == "rx_top") {
     SpinalConfig(
       targetDirectory = target
-    ).generateVerilog(Receiver_Analog(List(9, 2).toArray, 10, 14, 0))
-  } else if (target_name == "Channel") {
+    ).generateVerilog(rx_top(List(9, 2), 0))
+  } else if (target_name == "channel") {
     SpinalConfig(
       targetDirectory = target
-    ).generateVerilog(Channel(4,0))
+    ).generateVerilog(channel_top(4,0))
     
   }
 }

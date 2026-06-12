@@ -7,23 +7,34 @@
 # Targets: gen, gen-vhd, sim, wave, syn, prog, gui
 # Usage: make <target>
 
-
 MILL = ./mill
 MODULE = spreads
-ARGS = $(filter-out $@,$(MAKECMDGOALS))
+TARGETS = gen gen-vhd sim wave simwave syn prog gui clean help
+ARGS = $(filter-out $(TARGETS),$(MAKECMDGOALS))
 
-gen:
+# Stamp variables to track completion per argument
+STAMP_SUFFIX = $(if $(ARGS),$(ARGS),default)
+GEN_STAMP = .gen_$(STAMP_SUFFIX)
+SYN_STAMP = .syn_$(STAMP_SUFFIX)
+
+# Track all Scala files (and build.sc) to know when code actually changes
+SRC_FILES = $(shell find . -type f -name '*.scala' 2>/dev/null)
+
+gen: $(GEN_STAMP)
+
+$(GEN_STAMP): $(SRC_FILES)
 	@if [ "$(ARGS)" = "tx" ]; then \
-		$(MILL) $(MODULE).generateVerilog --topLevel Transmitter_Analog; \
+		$(MILL) $(MODULE).generateVerilog --topLevel tx_top; \
 	elif [ "$(ARGS)" = "rx" ]; then \
-		$(MILL) $(MODULE).generateVerilog --topLevel Receiver_Analog; \
+		$(MILL) $(MODULE).generateVerilog --topLevel rx_top; \
 	elif [ "$(ARGS)" = "channel" ]; then \
-		$(MILL) $(MODULE).generateVerilog --topLevel Channel; \
+		$(MILL) $(MODULE).generateVerilog --topLevel channel_top; \
 	elif [ -n "$(ARGS)" ]; then \
 		echo "Error: Unknown argument '$(ARGS)'"; exit 1; \
 	else \
 		$(MILL) $(MODULE).generateVerilog; \
 	fi
+	@touch $@
 
 gen-vhd:
 	$(MILL) $(MODULE).generateVhdl
@@ -38,18 +49,41 @@ simwave:
 	$(MILL) $(MODULE).sim 
 	$(MILL) $(MODULE).simwave
 
-syn:
-	@test -f src/sim_output/SpreadSpectrumTopAnalog/rtl/SpreadSpectrumTopAnalog.v || $(MAKE) gen
-	$(MILL) $(MODULE).synthesis
+syn: $(SYN_STAMP)
 
-prog:
-	$(MILL) $(MODULE).prog
+$(SYN_STAMP): $(GEN_STAMP)
+	@if [ "$(ARGS)" = "tx" ]; then \
+		$(MILL) $(MODULE).synthesis --topLevel tx_top; \
+	elif [ "$(ARGS)" = "rx" ]; then \
+		$(MILL) $(MODULE).synthesis --topLevel rx_top; \
+	elif [ "$(ARGS)" = "channel" ]; then \
+		$(MILL) $(MODULE).synthesis --topLevel channel_top; \
+	elif [ -n "$(ARGS)" ]; then \
+		echo "Error: Unknown argument '$(ARGS)'"; exit 1; \
+	else \
+		$(MILL) $(MODULE).synthesis; \
+	fi
+	@touch $@
+
+prog: $(SYN_STAMP)
+	@if [ "$(ARGS)" = "tx" ]; then \
+		$(MILL) $(MODULE).prog --topLevel tx_top; \
+	elif [ "$(ARGS)" = "rx" ]; then \
+		$(MILL) $(MODULE).prog --topLevel rx_top; \
+	elif [ "$(ARGS)" = "channel" ]; then \
+		$(MILL) $(MODULE).prog --topLevel channel_top; \
+	elif [ -n "$(ARGS)" ]; then \
+		echo "Error: Unknown argument '$(ARGS)'"; exit 1; \
+	else \
+		$(MILL) $(MODULE).prog; \
+	fi
 
 gui:
 	$(MILL) $(MODULE).quartusgui
 
 clean:
 	$(MILL) clean
+	rm -f .gen_* .syn_*
 
 help:
 	@echo "Usage: make [target]"
@@ -70,8 +104,8 @@ help:
 	@echo "  gui       - Open Quartus GUI"
 	@echo "  clean     - Clean build files"
 
-.PHONY: gen tx rx channel gen-vhd sim wave simwave syn prog gui help clean
-
+# Removed tx, rx, channel from .PHONY so the catch-all silences them
+.PHONY: gen gen-vhd sim wave simwave syn prog gui help clean
 
 # Catch all 
 %:

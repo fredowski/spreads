@@ -109,8 +109,9 @@ trait SpinalModule extends ScalaModule {
       .call(cwd = projectDir, stdout = os.Inherit, stderr = os.Inherit)
   }
 
-  def prog() = Task.Command {
-    val sof = synthesis().path
+  def prog(topLevel: String = sim_name) = Task.Command {
+    val sof = synthesis(topLevel)().path 
+    
     os.proc("quartus_pgm",
       "--64bit",
       "-c", "USB-Blaster",
@@ -119,13 +120,20 @@ trait SpinalModule extends ScalaModule {
     ).call(stdout = os.Inherit, stderr = os.Inherit)
   }
 
-  def synthesis: T[PathRef] = Task {
-    val tmp = generateVerilog()
+  def synthesis(topLevel: String = sim_name) = Task.Command {    
     val name       = moduleDir.last
     val projectDir = quartusDir
+
+    val vFile = s"../src/sim_output/$topLevel/rtl/$topLevel.v"
+
+    println(s"Setting TOP_LEVEL to '$topLevel' via set_files.tcl...")
+    
+    os.proc("quartus_sh", "-t", projectDir / "set_files.tcl", topLevel, vFile)
+      .call(cwd = projectDir, stdout = os.Inherit, stderr = os.Inherit)
+
     os.proc("quartus_sh", "--64bit", "--flow", "compile", quartusDir / "spread_quartus.qpf")
       .call(cwd = projectDir, stdout = os.Inherit, stderr = os.Inherit)
-    // Try printing out the quartus generated summaries, so we don't have to open GUI for PnR results
+
     val fitSummary = quartusDir / "output_files" / "spread_quartus.fit.summary"
     val mapSummary = quartusDir / "output_files" / "spread_quartus.map.summary"
     println("\n")
@@ -135,6 +143,7 @@ trait SpinalModule extends ScalaModule {
     println("-----------")
     if (os.exists(fitSummary)) println(os.read(fitSummary))
     println("-----------")    
+    
     PathRef(quartusDir / "output_files/spread_quartus.sof")
   }
 
