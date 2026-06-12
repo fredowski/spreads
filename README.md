@@ -83,6 +83,31 @@ For a Makefile target overview, see:
 
 Generated sources land in `src/sim_output/SpreadSpectrumTopAnalog/rtl/*.v(hd)`, simulation waveforms in `src/sim_output/SpreadSpectrumTopAnalog/test/*.vcd`.
 
+### Individual Target Options
+
+| Gen-Target    | Description                               |
+|---------------|-------------------------------------------|
+| `gen`         | Generate one Verilog top for all classes  |
+| `gen tx`      | Generate Verilog top only for transmitter |
+| `gen rx`      | Generate Verilog top only for receiver    |
+| `gen channel` | Generate Verilog top only for channel     |
+
+| Syn-Target    | Description                                      |
+|---------------|--------------------------------------------------|
+| `syn`         | Synthesise from Verilog top for all classes      |
+| `syn tx`      | Synthesise from Verilog top only for transmitter |
+| `syn rx`      | Synthesise from Verilog top only for receiver    |
+| `syn channel` | Synthesise from Verilog top only for channel     |
+
+
+
+| Prog-Target    | Description                              |
+|----------------|------------------------------------------|
+| `prog`         | Programm FPGA from  for all classes      |
+| `prog tx`      | Programm FPGA from  only for transmitter |
+| `prog rx`      | Programm FPGA from  only for receiver    |
+| `prog channel` | Programm FPGA from  only for channel     |
+
 ### Example Makefile usage
 
 ```
