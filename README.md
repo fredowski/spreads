@@ -1,6 +1,6 @@
 # Spread Spectrum SpinalHDL Project
 
-This is a Electrical Engineerig Master student project. The goals is to achieve Spread Spectrum communication on an FPGA, using the SpinalHDL language and a DE2 Altera board. The project includes artificual noise generation to simulate realistic environments and is based on LSFRs. Currently, no FFT usage is planned.
+This is a Electrical Engineering Master student project. The goals is to achieve Spread Spectrum communication on an FPGA, using the SpinalHDL language and a DE2 Altera board. The project includes artificial noise generation to simulate realistic environments and is based on LSFRs. Currently, no FFT usage is planned.
 
 This README will go over how to setup and use the project.
 
@@ -82,6 +82,31 @@ For a Makefile target overview, see:
 | `clean`    | Clear all Mill build artifacts                           |
 
 Generated sources land in `src/sim_output/SpreadSpectrumTopAnalog/rtl/*.v(hd)`, simulation waveforms in `src/sim_output/SpreadSpectrumTopAnalog/test/*.vcd`.
+
+### Individual Target Options
+
+| Gen-Target    | Description                               |
+|---------------|-------------------------------------------|
+| `gen`         | Generate one Verilog top for all classes  |
+| `gen tx`      | Generate Verilog top only for transmitter |
+| `gen rx`      | Generate Verilog top only for receiver    |
+| `gen channel` | Generate Verilog top only for channel     |
+
+| Syn-Target    | Description                                      |
+|---------------|--------------------------------------------------|
+| `syn`         | Synthesise from Verilog top for all classes      |
+| `syn tx`      | Synthesise from Verilog top only for transmitter |
+| `syn rx`      | Synthesise from Verilog top only for receiver    |
+| `syn channel` | Synthesise from Verilog top only for channel     |
+
+
+
+| Prog-Target    | Description                              |
+|----------------|------------------------------------------|
+| `prog`         | Programm FPGA from  for all classes      |
+| `prog tx`      | Programm FPGA from  only for transmitter |
+| `prog rx`      | Programm FPGA from  only for receiver    |
+| `prog channel` | Programm FPGA from  only for channel     |
 
 ### Example Makefile usage
 
