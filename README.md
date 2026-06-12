@@ -1,6 +1,6 @@
 # Spread Spectrum SpinalHDL Project
 
-This is a Electrical Engineerig Master student project. The goals is to achieve Spread Spectrum communication on an FPGA, using the SpinalHDL language and a DE2 Altera board. The project includes artificual noise generation to simulate realistic environments and is based on LSFRs. Currently, no FFT usage is planned.
+This is a Electrical Engineering Master student project. The goals is to achieve Spread Spectrum communication on an FPGA, using the SpinalHDL language and a DE2 Altera board. The project includes artificial noise generation to simulate realistic environments and is based on LSFRs. Currently, no FFT usage is planned.
 
 This README will go over how to setup and use the project.
 
