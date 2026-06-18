@@ -6,5 +6,6 @@ remove_all_global_assignments -name VERILOG_FILE
 set_global_assignment -name TOP_LEVEL_ENTITY $top_level
 set_global_assignment -name VERILOG_FILE $v_file
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
+source pins/de1_pin_assignments_minimumio.tcl
 export_assignments
 project_close

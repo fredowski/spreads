@@ -55,7 +55,10 @@ object genverilog extends App {
     SpinalConfig(
       targetDirectory = target
     ).generateVerilog(channel_top(4,0))
-    
+  } else if (target_name == "de1_adc") {
+    SpinalConfig(
+      targetDirectory = target
+    ).generateVerilog(de1_adc())
   }
 }
 
