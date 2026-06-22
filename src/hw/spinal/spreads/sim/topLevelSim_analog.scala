@@ -11,8 +11,8 @@ object TopLevelSimAnalog extends App {
   // 5 shifts is somewhere between -24 and -30 dB SNR then
   // performance with correlation over multiple symbols seems to behave somewhat like the python model
   // TODO: Do actual statistics instead of guessing
-  val signal_attenuation_shifts = 4
-  val compiled = SimConfig.withVerilator.withVcdWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly, symbols_to_integrate-1, signal_attenuation_shifts))
+  val signal_attenuation_shifts = 0
+  val compiled = SimConfig.withVerilator.withFstWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly, symbols_to_integrate-1, signal_attenuation_shifts))
   
   val CHIPS = math.pow(2,10).toInt -1
   
@@ -21,14 +21,15 @@ object TopLevelSimAnalog extends App {
   val rng = new scala.util.Random(0)
   val txBits = Seq.fill(10000)(rng.nextBoolean())
   val offsets = 1 to 1023 // Seq.fill(100)(rng.nextInt(1023))
+  val clockError = (1+1e-3).toLong
   compiled.doSim { dut =>
     // SUPER IMPORTANT, else this run will produce an absolutely gigantic vcd file
-    disableSimWave()
+    // disableSimWave()
     dut.clockDomain.forkSimSpeedPrinter(1)
 
-    val period = 10
+    val period = 1000000
     dut.clockDomain.forkStimulus(period = period)
-
+    ClockDomain(dut.txClockDomain.clock, dut.txClockDomain.reset).forkStimulus(period = 999999)
     for (offset <- offsets) {
       //perform reset without spawning new thread
       dut.io.txEnable #= false; dut.io.txData #= false
@@ -68,13 +69,14 @@ object TopLevelSimAnalog extends App {
       dut.io.txEnable #= false; dut.io.rxEnable #= false
       dut.clockDomain.waitSampling(5)
 
-      if (offset == detected_offset) {
+      // if (offset == detected_offset) {
         val passed = fullResults.count { case (rx, tx) => rx == tx }
-        println(s"\n=== $passed / ${txBits.length} bits recovered ===")
+        val BER = (txBits.length - passed.toDouble) / txBits.length
+        println(s"\n=== $passed / ${txBits.length} bits recovered; bit error rate = $BER ===")
         // println("Expected: " + fullResults.map { case (_, tx) => if (tx) " " else "▄" }.mkString)
         // println("Decoded:  " + fullResults.map { case (rx, _) => if (rx) " " else "▄" }.mkString)
         // println("Match:    " + fullResults.map { case (rx, tx) => if (rx == tx) "·" else "✗" }.mkString)
-      }
+      // }
 
       iterations+=1
       println("Code acquisition rate: " + successes.toDouble/iterations)

@@ -24,7 +24,8 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   io.data := False
   // three parallel correlators
   var acc = Vec.fill(3)(SInt((n_adc + m_lfsr) bits))
-  var accReg = Vec.fill(3)(Reg(SInt((n_adc + m_lfsr) bits)))
+  var accReg = RegNextWhen(acc, io.enable)
+  // var accReg = Vec.fill(3)(Reg(SInt((n_adc + m_lfsr) bits)))
   accReg.foreach(_ init(0))
   acc := Vec.fill(3)(0)
 
@@ -50,17 +51,16 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
     val sSearch, sLocking, sTracking = newElement()
   }
 
-  var errorReg = Reg(SInt(8 bits)) init(0) simPublic 
-  
-  errorReg := errorReg
+  var dll = DLL(accReg(0).getWidth, THRESH)
 
+  dll.io.accumulator := accReg
+  dll.io.enable := False
+  
   val state = Reg(TrackState()) init (TrackState.sSearch)
   state.setName("ReceiverState")
 
   when(io.enable) {
     accCount.increment()
-
-
 
     // TODO general method using scala fold or similar
     for (v <- 0 to 2)
@@ -71,8 +71,6 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
         acc(v) := accReg(v) -| inputRegVec(v)
       }
     }
-
-    accReg := acc
 
     switch(state) {
       is(TrackState.sSearch) {
@@ -108,6 +106,7 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
       }
       is(TrackState.sTracking) {
         when(lfsr.io.flag) {
+          dll.io.enable := True
           io.syncd := True
           acc := Vec.fill(3)(0)
           when(accReg(1) > 0) {
@@ -115,32 +114,48 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
           } otherwise {
             io.data := False
           }
-
-          // Delay Locked Loop
-          // 1. Generate and integrate error signal
-          when(accReg(0).abs > accReg(1).abs && accReg(0).abs > accReg(2).abs) {
-            errorReg := errorReg +|2
-          } elsewhen(accReg(2).abs > accReg(1).abs && accReg(2).abs > accReg(0).abs) {
-            errorReg := errorReg -|2
-          } elsewhen(errorReg > 0) {
-            errorReg := errorReg -|1
-          } elsewhen(errorReg < 0) {
-            errorReg := errorReg +|1
-          }
-
-          // 2. Advance or delay code based on error signal
-          when(errorReg > THRESH) {
-            lfsr.io.skip := True
-            errorReg := 0
-          } elsewhen(errorReg < -THRESH) {
-            lfsr.io.enable := False
-            errorReg := 0
+          
+          lfsr.io.skip := dll.io.advance
+          lfsr.io.enable := ~dll.io.delay
           }
         }
       }
     }
   }
-}
 
+case class DLL(acc_size: Int, thresh: Int)
+  extends Component {
+    val io = new Bundle {
+      val enable = in Bool()
+      val accumulator = in(Vec.fill(3)(SInt(acc_size bits)))
+      val advance = out Bool()
+      val delay = out Bool()
+    }
+    io.advance := False
+    io.delay := False
+    
+    var error = SInt(io.accumulator(0).getWidth +1 bits)
+    // var errorReg = Reg(SInt(io.accumulator(0).getWidth bits)) init(0) simPublic;
 
+    error := 0
+    // Integrate error
+    // errorReg := errorReg +| error
+    when(io.enable){
+      // Generate error signal
+      // error := (io.accumulator(0)-io.accumulator(2))/(io.accumulator(1))
+      when(io.accumulator(0).abs > io.accumulator(1).abs && io.accumulator(0).abs > io.accumulator(2).abs) {
+        error := (io.accumulator(0).abs - io.accumulator(1).abs).intoSInt 
+      } elsewhen(io.accumulator(2).abs > io.accumulator(1).abs && io.accumulator(2).abs > io.accumulator(0).abs) {
+        error := -(io.accumulator(2).abs.intoSInt - io.accumulator(1).abs.intoSInt)
+      } 
 
+      // Advance or delay code based on error signal
+      when(error > 5) {
+        io.delay := True
+        // errorReg := 0
+      } elsewhen(error < -5) {
+        io.advance := True
+        // errorReg := 0
+      }
+    }
+  }

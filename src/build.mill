@@ -166,7 +166,7 @@ trait SpinalModule extends ScalaModule {
 
   def simwave() = Task.Command {
     val simDir = projectRoot / "src" / "sim_output"
-    val wave = simDir / sim_name / "test" / "wave.vcd"
+    val wave = simDir / sim_name / "test" / "wave.fst"
     os.proc("gtkwave", wave)
       .call(stdout = os.Inherit, stderr = os.Inherit)
   }
@@ -181,9 +181,9 @@ trait SpinalModule extends ScalaModule {
       .call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
     os.proc("ghdl", "-e", "--std=08", s"${name}_tb")
       .call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
-    os.proc("ghdl", "-r", "--std=08", s"${name}_tb", "--vcd=wave.vcd")
+    os.proc("ghdl", "-r", "--std=08", s"${name}_tb", "--vcd=wave.fst")
       .call(cwd = Task.dest, stdout = os.Inherit, stderr = os.Inherit)
-    PathRef(Task.dest / "wave.vcd")
+    PathRef(Task.dest / "wave.fst")
   }
 
   def ghdlsimwave() = Task.Command {

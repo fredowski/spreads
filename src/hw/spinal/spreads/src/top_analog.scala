@@ -12,18 +12,23 @@ case class SpreadSpectrumTopAnalog(poly: List[Int], symbols_to_integrate: Int, s
     val syncd = out Bool ()
   }
 
+
   val ngen = Channel(signal_attenuation_shifts, 0)
-  val tx = Transmitter_Analog(poly)
+  
   val rx = Receiver_Analog(poly.toArray, 10, 14, symbols_to_integrate)
+
+  val txClockDomain = ClockDomain.external("clk_tx")
+  val txArea = new ClockingArea(txClockDomain) {
+    val tx = Transmitter_Analog(poly)
+    tx.io.enable := io.txEnable addTag(crossClockDomain)
+    tx.io.data := io.txData addTag(crossClockDomain)
+  }
 
   ngen.io.enable := io.txEnable
 
-  tx.io.enable := io.txEnable
-  tx.io.data := io.txData
-
   rx.io.enable := io.rxEnable
 
-  ngen.io.i := tx.io.coded
+  ngen.io.i := txArea.tx.io.coded addTag(crossClockDomain)
   rx.io.signal := ngen.io.o
 
   io.decoded := rx.io.data
