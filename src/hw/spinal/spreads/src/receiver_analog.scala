@@ -71,13 +71,14 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
       {
         when(dll.io.delay) {
           lfsr_tracking.io.enable := False
-          io.data := (acc(0) > 0)
+          io.data := (accReg(0) > 0)
         } elsewhen(dll.io.advance) {
           lfsr_tracking.io.skip := True
-          io.data := (acc(2) > 0)
+          io.data := (accReg(2) > 0)
         } otherwise {
-          io.data := (acc(1) > 0)
+          io.data := (accReg(1) > 0)
         }
+        acc := Vec.fill(3)(0)
       }
     }
   }
