@@ -22,7 +22,6 @@ case class tx_top(poly: List[Int]) extends Component {
     val ADC_OEB_A = out Bool () setName ("ADC_OEB_A")
     val ADC_OEB_B = out Bool () setName ("ADC_OEB_B")
 }
-  //ClockDomain.current.reset := !io.KEY0
   
   val negEdgeClockDomain = ClockDomain(
     clock  = io.clk,
@@ -34,7 +33,7 @@ case class tx_top(poly: List[Int]) extends Component {
     )
   )
 
-  val myClockDomain = ClockDomain(
+  val clockDomainWithKey0Reset = ClockDomain(
     clock  = io.clk,
     reset  = io.KEY0,
     config = ClockDomainConfig(
@@ -43,7 +42,7 @@ case class tx_top(poly: List[Int]) extends Component {
       resetActiveLevel = LOW
     )
   )
-  val myArea = new ClockingArea(myClockDomain) {
+  val clockingArea = new ClockingArea(clockDomainWithKey0Reset) {
 
     val tx = Transmitter_Analog(poly)
 
@@ -54,7 +53,7 @@ case class tx_top(poly: List[Int]) extends Component {
   }
   
   val negEdgeArea = new ClockingArea(negEdgeClockDomain) {    
-    val buff0 = RegNext(myArea.codedBits) init(0) addTag(crossClockDomain) 
+    val buff0 = RegNext(clockingArea.codedBits) init(0) addTag(crossClockDomain) 
     val buff1 = RegNext(buff0) init(0) addTag(crossClockDomain)
   }
 
