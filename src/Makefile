@@ -29,6 +29,8 @@ $(GEN_STAMP): $(SRC_FILES)
 		$(MILL) $(MODULE).generateVerilog --topLevel rx_top; \
 	elif [ "$(ARGS)" = "channel" ]; then \
 		$(MILL) $(MODULE).generateVerilog --topLevel channel_top; \
+	elif [ "$(ARGS)" = "adc" ]; then \
+		$(MILL) $(MODULE).generateVerilog --topLevel de1_adc; \
 	elif [ -n "$(ARGS)" ]; then \
 		echo "Error: Unknown argument '$(ARGS)'"; exit 1; \
 	else \
@@ -58,6 +60,8 @@ $(SYN_STAMP): $(GEN_STAMP)
 		$(MILL) $(MODULE).synthesis --topLevel rx_top; \
 	elif [ "$(ARGS)" = "channel" ]; then \
 		$(MILL) $(MODULE).synthesis --topLevel channel_top; \
+	elif [ "$(ARGS)" = "adc" ]; then \
+		$(MILL) $(MODULE).synthesis --topLevel de1_adc; \
 	elif [ -n "$(ARGS)" ]; then \
 		echo "Error: Unknown argument '$(ARGS)'"; exit 1; \
 	else \
@@ -72,6 +76,8 @@ prog: $(SYN_STAMP)
 		$(MILL) $(MODULE).prog --topLevel rx_top; \
 	elif [ "$(ARGS)" = "channel" ]; then \
 		$(MILL) $(MODULE).prog --topLevel channel_top; \
+	elif [ "$(ARGS)" = "adc" ]; then \
+		$(MILL) $(MODULE).prog --topLevel de1_adc; \
 	elif [ -n "$(ARGS)" ]; then \
 		echo "Error: Unknown argument '$(ARGS)'"; exit 1; \
 	else \

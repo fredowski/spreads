@@ -128,7 +128,7 @@ trait SpinalModule extends ScalaModule {
 
     println(s"Setting TOP_LEVEL to '$topLevel' via set_files.tcl...")
     
-    os.proc("quartus_sh", "-t", projectDir / "set_files.tcl", topLevel, vFile)
+    os.proc("quartus_sh", "--64bit", "-t", projectDir / "set_files.tcl", topLevel, vFile)
       .call(cwd = projectDir, stdout = os.Inherit, stderr = os.Inherit)
 
     os.proc("quartus_sh", "--64bit", "--flow", "compile", quartusDir / "spread_quartus.qpf")
