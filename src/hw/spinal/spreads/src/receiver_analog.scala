@@ -37,7 +37,6 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   dll.io.early := accReg(0)
   dll.io.prompt := accReg(1)
   dll.io.late := accReg(2)
-  dll.io.enable := False
   
   val acq = Code_Acquisition(poly, m_lfsr, n_adc, n_integrator)
   acq.io.enable := io.enable
@@ -46,6 +45,8 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   lfsr_tracking.io.load := acq.io.found
 
   val foundReg = Reg(False)
+
+   dll.io.enable := foundReg
 
   when(io.enable) {
     // TODO general method using scala fold or similar
@@ -66,13 +67,12 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
 
       io.syncd := foundReg & lfsr_tracking.io.flag
 
-
       when(lfsr_tracking.io.flag)
       {
-        when(dll.io.delay) {
+        when(dll.io.advance) {
           lfsr_tracking.io.enable := False
           io.data := (accReg(0) > 0)
-        } elsewhen(dll.io.advance) {
+        } elsewhen(dll.io.delay) {
           lfsr_tracking.io.skip := True
           io.data := (accReg(2) > 0)
         } otherwise {
@@ -159,7 +159,6 @@ case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integra
           when(offsetCount === offsetCount.maxValue) {
             state := TrackState.sTracking
           }
-
         }
         is(TrackState.sTracking) {
           
@@ -188,22 +187,29 @@ case class DLL(acc_size: Int, thresh: Int)
     error := 0
     // Integrate error
     // errorReg := errorReg +| error
+
+    var errorReg = Reg(SInt(8 bits)) init(0)
+
     when(io.enable){
       // Generate error signal
       // error := (io.accumulator(0)-io.accumulator(2))/(io.accumulator(1))
       when(io.early.abs > io.prompt.abs && io.early.abs > io.late.abs) {
-        error := (io.early.abs - io.prompt.abs).intoSInt 
+        errorReg := errorReg +| 2
       } elsewhen(io.late.abs > io.prompt.abs && io.late.abs > io.early.abs) {
-        error := -(io.late.abs.intoSInt - io.prompt.abs.intoSInt)
-      } 
+        errorReg := errorReg -| 2
+      } elsewhen(errorReg >0) {
+        errorReg := errorReg -1
+      } elsewhen(errorReg <0) {
+        errorReg := errorReg +1
+      }
 
       // Advance or delay code based on error signal
-      when(error > 5) {
-        io.delay := True
-        // errorReg := 0
-      } elsewhen(error < -5) {
+      when(errorReg > thresh) {
         io.advance := True
-        // errorReg := 0
+        errorReg := 0
+      } elsewhen(errorReg < -thresh) {
+        io.delay := True
+        errorReg := 0
       }
     }
   }
