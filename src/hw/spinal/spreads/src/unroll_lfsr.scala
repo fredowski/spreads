@@ -20,6 +20,8 @@ case class UnrollLFSR(poly: Array[Int], m_lfsr: Int, steps: Int, n_out: Int)
     val rnd_o = out UInt (n_out bits)
     val skip = in Bool ()
     val state = out Bits (m_lfsr bits)
+    val i_parallel = in Bits (m_lfsr bits)
+    val load = in Bool()
   }
 
   def step(state: Bits): Bits = {
@@ -39,6 +41,10 @@ case class UnrollLFSR(poly: Array[Int], m_lfsr: Int, steps: Int, n_out: Int)
     } otherwise {
       sr := advance(sr, steps)
     }
+  }
+
+  when(io.load) {
+    sr := io.i_parallel
   }
 
   io.state := sr

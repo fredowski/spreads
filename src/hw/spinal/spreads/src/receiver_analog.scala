@@ -12,15 +12,12 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
     val data = out Bool ()
     val syncd = out Bool ()
   }
-  val chips = scala.math.pow(2, m_lfsr).toInt - 1
-  val THRESH = 20
   io.syncd := False
-  val lfsr = UnrollLFSR(poly.toArray, poly.max + 1, 1, 1)
-  lfsr.io.skip := False
-  lfsr.io.enable := io.enable
 
-  // var data = False
-  // val dataReg = RegNextWhen(data, io.syncd)
+  val lfsr_tracking = UnrollLFSR(poly.toArray, poly.max + 1, 1, 1)
+  lfsr_tracking.io.enable := True
+  lfsr_tracking.io.skip := False
+
   io.data := False
   // three parallel correlators
   var acc = Vec.fill(3)(SInt((n_adc + m_lfsr) bits))
@@ -29,95 +26,142 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   accReg.foreach(_ init(0))
   acc := Vec.fill(3)(0)
 
-  var inputRegVec = Vec.fill(3)(Reg(SInt (n_adc bits)))
+  var inputRegVec = Vec.fill(2)(Reg(SInt (n_adc bits)))
   inputRegVec.foreach(_ init(0))
 
   inputRegVec(0) := io.signal
   inputRegVec(1) := inputRegVec(0)
-  inputRegVec(2) := inputRegVec(1)
 
-  var maxReg = Reg(UInt((n_adc + m_lfsr + n_integrator) bits)) init (0) simPublic
-  var offsetReg = Reg(UInt(m_lfsr bits)) init(0) simPublic
+  var dll = DLL(accReg(0).getWidth, 20)
 
-  var accCount = Counter(1 to chips) init(1)
-  var offsetCount = Counter((m_lfsr) bits) init(0)
-  var symbolCount = Counter(0 to n_integrator) init(0)
-
-  var multiCorr = UInt((n_adc + m_lfsr + n_integrator) bits)
-  var multiCorrReg = RegNext(multiCorr) init (0)
-  multiCorr := multiCorrReg
-
-    object TrackState extends SpinalEnum {
-    val sSearch, sLocking, sTracking = newElement()
-  }
-
-  var dll = DLL(accReg(0).getWidth, THRESH)
-
-  dll.io.accumulator := accReg
+  dll.io.early := accReg(0)
+  dll.io.prompt := accReg(1)
+  dll.io.late := accReg(2)
   dll.io.enable := False
   
-  val state = Reg(TrackState()) init (TrackState.sSearch)
-  state.setName("ReceiverState")
+  val acq = Code_Acquisition(poly, m_lfsr, n_adc, n_integrator)
+  acq.io.enable := io.enable
+  acq.io.signal := io.signal
+  lfsr_tracking.io.i_parallel := acq.io.lfsr_state
+  lfsr_tracking.io.load := acq.io.found
+
+  val foundReg = Reg(False)
 
   when(io.enable) {
-    accCount.increment()
-
     // TODO general method using scala fold or similar
-    for (v <- 0 to 2)
-    {
-      when(lfsr.io.rnd_o(0) === False) {
-        acc(v) := accReg(v) +| inputRegVec(v)
+      when(lfsr_tracking.io.rnd_o(0) === False) {
+        acc(0) := accReg(0) +| io.signal
+        acc(1) := accReg(1) +| inputRegVec(0)
+        acc(2) := accReg(2) +| inputRegVec(1)
       } otherwise {
-        acc(v) := accReg(v) -| inputRegVec(v)
+        acc(0) := accReg(0) -| io.signal
+        acc(1) := accReg(1) -| inputRegVec(0)
+        acc(2) := accReg(2) -| inputRegVec(1)
+      }
+
+      when(acq.io.found) {
+        acc := Vec.fill(3)(0)
+        foundReg := True
+      }
+
+      io.syncd := foundReg & lfsr_tracking.io.flag
+
+
+      when(lfsr_tracking.io.flag)
+      {
+        when(dll.io.delay) {
+          lfsr_tracking.io.enable := False
+          io.data := (acc(0) > 0)
+        } elsewhen(dll.io.advance) {
+          lfsr_tracking.io.skip := True
+          io.data := (acc(2) > 0)
+        } otherwise {
+          io.data := (acc(1) > 0)
+        }
       }
     }
+  }
 
-    switch(state) {
-      is(TrackState.sSearch) {
-        // store result of iteration
-        when(lfsr.io.flag) {
-          symbolCount.increment()
-          acc := Vec.fill(3)(0)
-          multiCorr := multiCorrReg +| accReg(1).abs
-          when(symbolCount.willOverflow) {
-            multiCorrReg := 0
-            offsetCount.increment()
-            when(multiCorr > maxReg) {
-              maxReg := multiCorr
-              offsetReg := accCount
+case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrator: Int)
+  extends Component {
+    val io = new Bundle {
+      val enable = in Bool ()
+      val signal = in SInt (n_adc bits)
+      val found = out Bool ()
+      val lfsr_state = out Bits(m_lfsr bits)
+    }
+
+    io.found := False
+    
+    val chips = scala.math.pow(2, m_lfsr).toInt - 1
+
+    val lfsr = UnrollLFSR(poly.toArray, poly.max + 1, 1, 1)
+    lfsr.io.skip := False
+    lfsr.io.enable := io.enable
+    lfsr.io.load := False
+    lfsr.io.i_parallel := (default -> false)
+    
+    io.lfsr_state := lfsr.io.state
+
+    var acc = SInt((n_adc + m_lfsr) bits)
+    var accReg = RegNextWhen(acc, io.enable) init(0)
+    // var accReg = Vec.fill(3)(Reg(SInt((n_adc + m_lfsr) bits)))
+    acc := 0
+
+    var maxReg = Reg(UInt((n_adc + m_lfsr + n_integrator) bits)) init (0) simPublic
+    var offsetReg = Reg(UInt(m_lfsr bits)) init(0) simPublic
+
+    var accCount = Counter(1 to chips) init(1)
+    var offsetCount = Counter((m_lfsr) bits) init(0)
+    var symbolCount = Counter(0 to n_integrator) init(0)
+
+    var multiCorr = UInt((n_adc + m_lfsr + n_integrator) bits)
+    var multiCorrReg = RegNext(multiCorr) init (0)
+    multiCorr := multiCorrReg
+
+    object TrackState extends SpinalEnum {
+      val sSearch, sTracking = newElement()
+    }
+    val state = Reg(TrackState()) init (TrackState.sSearch)
+    state.setName("ReceiverState")
+
+    when(io.enable) {
+      accCount.increment()
+
+      // TODO general method using scala fold or similar
+      when(lfsr.io.rnd_o(0) === False) {
+        acc := accReg +| io.signal
+      } otherwise {
+        acc := accReg -| io.signal
+      }
+
+      switch(state) {
+        is(TrackState.sSearch) {
+          // store result of iteration
+          when(lfsr.io.flag) {
+            symbolCount.increment()
+            acc := 0
+            multiCorr := multiCorrReg +| accReg.abs
+            when(symbolCount.willOverflow) {
+              multiCorrReg := 0
+              offsetCount.increment()
+              when(multiCorr > maxReg) {
+                maxReg := multiCorr
+                offsetReg := accCount
+                io.found := True
+              }
+              lfsr.io.skip := True
             }
-            lfsr.io.skip := True
           }
-        }
 
-        // tried all offsets
-        when(offsetCount === offsetCount.maxValue) {
-          state := TrackState.sLocking
-        }
-
-      }
-      is(TrackState.sLocking) {
-        acc := Vec.fill(3)(0)
-        when((accCount === (offsetReg)) && lfsr.io.flag) {
-          state := TrackState.sTracking
-        } elsewhen (lfsr.io.flag) {
-          lfsr.io.enable := False
-        }
-      }
-      is(TrackState.sTracking) {
-        when(lfsr.io.flag) {
-          dll.io.enable := True
-          io.syncd := True
-          acc := Vec.fill(3)(0)
-          when(accReg(1) > 0) {
-            io.data := True
-          } otherwise {
-            io.data := False
+          // tried all offsets
+          when(offsetCount === offsetCount.maxValue) {
+            state := TrackState.sTracking
           }
+
+        }
+        is(TrackState.sTracking) {
           
-          lfsr.io.skip := dll.io.advance
-          lfsr.io.enable := ~dll.io.delay
-          }
         }
       }
     }
@@ -127,14 +171,17 @@ case class DLL(acc_size: Int, thresh: Int)
   extends Component {
     val io = new Bundle {
       val enable = in Bool()
-      val accumulator = in(Vec.fill(3)(SInt(acc_size bits)))
+      val early = in SInt(acc_size bits)
+      val prompt = in SInt(acc_size bits)
+      val late = in SInt(acc_size bits)
       val advance = out Bool()
       val delay = out Bool()
     }
+
     io.advance := False
     io.delay := False
     
-    var error = SInt(io.accumulator(0).getWidth +1 bits)
+    var error = SInt(acc_size+1 bits)
     // var errorReg = Reg(SInt(io.accumulator(0).getWidth bits)) init(0) simPublic;
 
     error := 0
@@ -143,10 +190,10 @@ case class DLL(acc_size: Int, thresh: Int)
     when(io.enable){
       // Generate error signal
       // error := (io.accumulator(0)-io.accumulator(2))/(io.accumulator(1))
-      when(io.accumulator(0).abs > io.accumulator(1).abs && io.accumulator(0).abs > io.accumulator(2).abs) {
-        error := (io.accumulator(0).abs - io.accumulator(1).abs).intoSInt 
-      } elsewhen(io.accumulator(2).abs > io.accumulator(1).abs && io.accumulator(2).abs > io.accumulator(0).abs) {
-        error := -(io.accumulator(2).abs.intoSInt - io.accumulator(1).abs.intoSInt)
+      when(io.early.abs > io.prompt.abs && io.early.abs > io.late.abs) {
+        error := (io.early.abs - io.prompt.abs).intoSInt 
+      } elsewhen(io.late.abs > io.prompt.abs && io.late.abs > io.early.abs) {
+        error := -(io.late.abs.intoSInt - io.prompt.abs.intoSInt)
       } 
 
       // Advance or delay code based on error signal

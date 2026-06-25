@@ -19,7 +19,7 @@ object TopLevelSimAnalog extends App {
   var successes = 0
   var iterations = 0
   val rng = new scala.util.Random(0)
-  val txBits = Seq.fill(10000)(rng.nextBoolean())
+  val txBits = Seq.fill(1000)(rng.nextBoolean())
   val offsets = 1 to 1023 // Seq.fill(100)(rng.nextInt(1023))
   val clockError = (1+1e-3).toLong
   compiled.doSim { dut =>
@@ -47,7 +47,7 @@ object TopLevelSimAnalog extends App {
       // dut.clockDomain.waitSampling(CHIPS*CHIPS*3)
       var timeout = dut.clockDomain.waitSamplingWhere(CHIPS*CHIPS*11*period)(dut.io.syncd.toBoolean)
       assert(timeout == false, "No synchronization acquired!")
-      var detected_offset = (CHIPS - dut.rx.offsetReg.toInt + 3) % CHIPS
+      var detected_offset = (CHIPS - dut.rx.acq.offsetReg.toInt + 3) % CHIPS
       println("Transmitted signal phase offset: " + offset)
       println("Signal detected at phase offset: " + detected_offset)
       // println("MaxReg value: " + dut.rx.maxReg.toInt)

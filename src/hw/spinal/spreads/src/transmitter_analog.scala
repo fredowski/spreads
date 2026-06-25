@@ -13,6 +13,8 @@ case class Transmitter_Analog(poly: List[Int]) extends Component {
   val lfsr = UnrollLFSR(poly.toArray, poly.max + 1, 1, 1)
   lfsr.io.enable := io.enable
   lfsr.io.skip := False
+  lfsr.io.load := False
+  lfsr.io.i_parallel := (default -> false)
 
   val latchedData = RegNextWhen(io.data, lfsr.io.flag)
 
