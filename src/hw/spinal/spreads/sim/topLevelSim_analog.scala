@@ -47,11 +47,11 @@ object TopLevelSimAnalog extends App {
       // dut.clockDomain.waitSampling(CHIPS*CHIPS*3)
       var timeout = dut.clockDomain.waitSamplingWhere(CHIPS*CHIPS*11*period)(dut.io.syncd.toBoolean)
       assert(timeout == false, "No synchronization acquired!")
-      var detected_offset = (CHIPS - dut.rx.acq.offsetReg.toInt + 3) % CHIPS
-      println("Transmitted signal phase offset: " + offset)
-      println("Signal detected at phase offset: " + detected_offset)
+      // var detected_offset = (CHIPS - dut.rx.acq.offsetReg.toInt + 3) % CHIPS
+      // println("Transmitted signal phase offset: " + offset)
+      // println("Signal detected at phase offset: " + detected_offset)
       // println("MaxReg value: " + dut.rx.maxReg.toInt)
-      if (offset == detected_offset) successes+=1
+      // if (offset == detected_offset) successes+=1
       // assert(offset == detected_offset, "Code acquisition not successful")
       dut.clockDomain.waitSampling(100)
       // enableSimWave()

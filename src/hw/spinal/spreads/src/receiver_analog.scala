@@ -38,17 +38,53 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   dll.io.prompt := accReg(1)
   dll.io.late := accReg(2)
   
-  val acq = Code_Acquisition(poly, m_lfsr, n_adc, n_integrator)
-  acq.io.enable := io.enable
-  acq.io.signal := io.signal
-  lfsr_tracking.io.i_parallel := acq.io.lfsr_state
-  lfsr_tracking.io.load := acq.io.found
+  // val acq = Code_Acquisition(poly, m_lfsr, n_adc, n_integrator)
+  // acq.io.enable := io.enable
+  // acq.io.signal := io.signal
+  // lfsr_tracking.io.i_parallel := acq.io.lfsr_state
+  // lfsr_tracking.io.load := acq.io.found
+  lfsr_tracking.io.load := False
+  lfsr_tracking.io.i_parallel := (default -> false)
+
 
   val foundReg = Reg(False)
 
-   dll.io.enable := foundReg
+  dll.io.enable := foundReg
+
+  val maxReg = Reg(UInt((n_adc + m_lfsr + n_integrator) bits))
+  val seekerCount = 32
+  val initCounter = Counter(m_lfsr bits)
+  val stepSize = 32//initCounter.maxValue / seekerCount
+
+  val acqList = List.fill(seekerCount)(Code_Acquisition(poly, m_lfsr, n_adc, n_integrator, stepSize))
+  for (acq <- acqList) {
+    acq.io.enable := io.enable
+    acq.io.signal := io.signal
+    when(acq.io.found & (acq.io.max > maxReg)) {
+      maxReg := acq.io.max
+      lfsr_tracking.io.load := True
+      lfsr_tracking.io.i_parallel := acq.io.lfsr_state
+      acc := Vec.fill(3)(0)
+      foundReg := True
+    }
+  }
+
+
+
 
   when(io.enable) {
+    // Initialization of acquisition blocks
+    when(initCounter<initCounter.maxValue) {
+      initCounter.increment()
+      for((acq,i) <- acqList.view.zipWithIndex)
+      {
+        when(initCounter < (i*stepSize)) {
+          acq.io.enable := False
+        }
+      }
+    }
+
+
     // TODO general method using scala fold or similar
       when(lfsr_tracking.io.rnd_o(0) === False) {
         acc(0) := accReg(0) +| io.signal
@@ -60,10 +96,10 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
         acc(2) := accReg(2) -| inputRegVec(1)
       }
 
-      when(acq.io.found) {
-        acc := Vec.fill(3)(0)
-        foundReg := True
-      }
+      // when(acq.io.found) {
+      //   acc := Vec.fill(3)(0)
+      //   foundReg := True
+      // }
 
       io.syncd := foundReg & lfsr_tracking.io.flag
 
@@ -83,18 +119,17 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
     }
   }
 
-case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrator: Int)
+case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrator: Int, offsets: BigInt)
   extends Component {
     val io = new Bundle {
       val enable = in Bool ()
       val signal = in SInt (n_adc bits)
       val found = out Bool ()
       val lfsr_state = out Bits(m_lfsr bits)
+      val max = out UInt((n_adc + m_lfsr + n_integrator) bits)
     }
 
     io.found := False
-    
-    val chips = scala.math.pow(2, m_lfsr).toInt - 1
 
     val lfsr = UnrollLFSR(poly.toArray, poly.max + 1, 1, 1)
     lfsr.io.skip := False
@@ -109,14 +144,15 @@ case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integra
     // var accReg = Vec.fill(3)(Reg(SInt((n_adc + m_lfsr) bits)))
     acc := 0
 
-    var maxReg = Reg(UInt((n_adc + m_lfsr + n_integrator) bits)) init (0) simPublic
-    var offsetReg = Reg(UInt(m_lfsr bits)) init(0) simPublic
+    var maxReg = Reg(io.max) init (0) 
 
-    var accCount = Counter(1 to chips) init(1)
-    var offsetCount = Counter((m_lfsr) bits) init(0)
+    io.max := maxReg
+    var offsetReg = Reg(UInt(m_lfsr bits)) init(0) 
+
+    var offsetCount = Counter((offsets) bits) init(0)
     var symbolCount = Counter(0 to n_integrator) init(0)
 
-    var multiCorr = UInt((n_adc + m_lfsr + n_integrator) bits)
+    var multiCorr = cloneOf(io.max)
     var multiCorrReg = RegNext(multiCorr) init (0)
     multiCorr := multiCorrReg
 
@@ -127,8 +163,6 @@ case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integra
     state.setName("ReceiverState")
 
     when(io.enable) {
-      accCount.increment()
-
       // TODO general method using scala fold or similar
       when(lfsr.io.rnd_o(0) === False) {
         acc := accReg +| io.signal
@@ -148,7 +182,6 @@ case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integra
               offsetCount.increment()
               when(multiCorr > maxReg) {
                 maxReg := multiCorr
-                offsetReg := accCount
                 io.found := True
               }
               lfsr.io.skip := True
