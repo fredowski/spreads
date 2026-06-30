@@ -17,6 +17,8 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   val lfsr_tracking = UnrollLFSR(poly.toArray, poly.max + 1, 1, 1)
   lfsr_tracking.io.enable := True
   lfsr_tracking.io.skip := False
+  lfsr_tracking.io.load := False
+  lfsr_tracking.io.i_parallel := (default -> false)
 
   io.data := False
   // three parallel correlators
@@ -32,7 +34,7 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   inputRegVec(0) := io.signal
   inputRegVec(1) := inputRegVec(0)
 
-  var dll = DLL(accReg(0).getWidth, 20)
+  var dll = DLL(accReg(0).getWidth, 1)
 
   dll.io.early := accReg(0)
   dll.io.prompt := accReg(1)
@@ -43,20 +45,19 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   // acq.io.signal := io.signal
   // lfsr_tracking.io.i_parallel := acq.io.lfsr_state
   // lfsr_tracking.io.load := acq.io.found
-  lfsr_tracking.io.load := False
-  lfsr_tracking.io.i_parallel := (default -> false)
+
 
 
   val foundReg = Reg(False)
 
-  dll.io.enable := foundReg
+  dll.io.enable := lfsr_tracking.io.flag
 
-  val maxReg = Reg(UInt((n_adc + m_lfsr + n_integrator) bits))
+  val maxReg = Reg(UInt((n_adc + m_lfsr + n_integrator) bits)) init(0)
   val seekerCount = 32
   val initCounter = Counter(m_lfsr bits)
   val stepSize = 32//initCounter.maxValue / seekerCount
 
-  val acqList = List.fill(seekerCount)(Code_Acquisition(poly, m_lfsr, n_adc, n_integrator, stepSize))
+  val acqList = List.fill(seekerCount)(Code_Acquisition(poly, m_lfsr, n_adc, n_integrator, stepSize+1))
   for (acq <- acqList) {
     acq.io.enable := io.enable
     acq.io.signal := io.signal
@@ -189,9 +190,9 @@ case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integra
           }
 
           // tried all offsets
-          when(offsetCount === offsetCount.maxValue) {
-            state := TrackState.sTracking
-          }
+          // when(offsetCount === offsetCount.maxValue) {
+          //   state := TrackState.sTracking
+          // }
         }
         is(TrackState.sTracking) {
           
@@ -221,7 +222,7 @@ case class DLL(acc_size: Int, thresh: Int)
     // Integrate error
     // errorReg := errorReg +| error
 
-    var errorReg = Reg(SInt(8 bits)) init(0)
+    var errorReg = Reg(SInt(16 bits)) init(0)
 
     when(io.enable){
       // Generate error signal

@@ -5,7 +5,7 @@ import spinal.core.sim._
 
 object TopLevelSimAnalog extends App {
   val poly = List(9,2)
-  val symbols_to_integrate = 1
+  val symbols_to_integrate = 4
   // 6dB reduced signal power per right shift (half level = 1/4 power = -6dB)
   // Not sure what equivalent noise power of current channel is, somewhere between 0 and -6 dB probably? 
   // 5 shifts is somewhere between -24 and -30 dB SNR then
@@ -20,7 +20,7 @@ object TopLevelSimAnalog extends App {
   var iterations = 0
   val rng = new scala.util.Random(0)
   val txBits = Seq.fill(10000)(rng.nextBoolean())
-  val offsets = 1 to 1023 // Seq.fill(100)(rng.nextInt(1023))
+  val offsets = Seq.fill(10)(rng.nextInt(1023))
   val clockError = (1+1e-3).toLong
   compiled.doSim { dut =>
     // SUPER IMPORTANT, else this run will produce an absolutely gigantic vcd file
@@ -54,8 +54,14 @@ object TopLevelSimAnalog extends App {
       // if (offset == detected_offset) successes+=1
       // assert(offset == detected_offset, "Code acquisition not successful")
       dut.clockDomain.waitSampling(100)
+      // 1000 Bits for code acquisition
+      for (b <- txBits.take(1024)) {
+        dut.io.txData #= b
+        dut.clockDomain.waitRisingEdgeWhere(dut.io.syncd.toBoolean)
+      }
       // enableSimWave()
       // Begin sending bit sequence
+      
       var results = new Array[Boolean](txBits.length)
       for ((b,i) <- txBits.view.zipWithIndex) {
         dut.io.txData #= b
@@ -79,7 +85,7 @@ object TopLevelSimAnalog extends App {
       // }
 
       iterations+=1
-      println("Code acquisition rate: " + successes.toDouble/iterations)
+      // println("Code acquisition rate: " + successes.toDouble/iterations)
     }
   }
 }
