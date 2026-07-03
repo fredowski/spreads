@@ -7,7 +7,7 @@ case class Channel() extends Component {
   val io = new Bundle {
     val enable = in Bool ()
     val i = in SInt (14 bits)
-    val attenutation = in UInt (2 bits)
+    val attenuation = in UInt (2 bits)
     val noise = in UInt (2 bits)
     val o = out SInt (14 bits)
   }
@@ -52,7 +52,7 @@ case class Channel() extends Component {
   X =
     lfsr0.io.rnd_o.asSInt +^ lfsr1.io.rnd_o.asSInt +^ lfsr2.io.rnd_o.asSInt +^ lfsr3.io.rnd_o.asSInt +^ lfsr4.io.rnd_o.asSInt
 
-  io.o := (io.i >> io.attenutation) +| (X(13 downto 0) >> io.noise)
+  io.o := (io.i >> io.attenuation) +| (X(13 downto 0) >> io.noise)
 
   // this is where I would put my math... IF I HAD ANY
   // val X = Math.sqrt(-2 * Math.log(lfsr1.io.rnd_o)) * Math.cos(2*Math.PI*lfsr2.io.rnd_o)

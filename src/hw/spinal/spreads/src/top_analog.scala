@@ -14,7 +14,7 @@ case class SpreadSpectrumTopAnalog(poly: List[Int], symbols_to_integrate: Int, s
 
 
   val ngen = Channel()
-  ngen.io.attenutation := signal_attenuation_shifts
+  ngen.io.attenuation := signal_attenuation_shifts
   ngen.io.noise := 0
   val rx = Receiver_Analog(poly.toArray, 10, 14, symbols_to_integrate)
 

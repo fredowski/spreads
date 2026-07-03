@@ -10,7 +10,7 @@ case class channel_top() extends Component {
   val io = new Bundle {
     val clk       = in Bool () setName("CLOCK_50")
     val SW        = in Bits (10 bits) setName ("SW")
-    val LEDR      = out Bits (1 bits) setName ("LEDR") 
+    val LEDR      = out Bits (10 bits) setName ("LEDR") 
     val DAC_MODE  = out Bool () setName ("DAC_MODE")  // 1=dual port, 0=interleaved
     val DAC_WRT_A = out Bool () setName ("DAC_WRT_A")
     val DAC_WRT_B = out Bool () setName ("DAC_WRT_B")
@@ -30,6 +30,8 @@ case class channel_top() extends Component {
     val ADC_OTR_B = in Bool () setName ("ADC_OTR_B")
   }
 
+  io.LEDR := (default -> false)
+
   val key0ResetClockDomain = ClockDomain(
     clock  = io.clk,
     reset  = io.KEY0,
@@ -44,8 +46,13 @@ case class channel_top() extends Component {
     val channel = Channel()
     val decodedBits = ~io.ADC_DA.asUInt(13) ## io.ADC_DA.asUInt(12 downto 0)
 
-    channel.io.attenutation := U(io.SW(9) ## io.SW(8))
-    channel.io.noise := U(io.SW(7) ## io.SW(6) )
+
+    io.LEDR(6) := io.SW(6)
+    io.LEDR(7) := io.SW(7)
+    io.LEDR(8) := io.SW(8)
+    io.LEDR(9) := io.SW(9)
+    channel.io.attenuation := U(io.SW(9) ## io.SW(8))
+    channel.io.noise := U(~io.SW(7) ## ~io.SW(6) )
 
     channel.io.enable := io.SW(0)
     channel.io.i := S(decodedBits);
@@ -64,8 +71,8 @@ case class channel_top() extends Component {
   io.ADC_CLK_B := io.clk
   io.ADC_OEB_A := False
   io.ADC_OEB_B := False
-  io.DAC_DA := clockArea.channel.io.o.asBits addTag(crossClockDomain)
-  io.DAC_DB := clockArea.channel.io.o.asBits addTag(crossClockDomain)
+  io.DAC_DA := ~clockArea.channel.io.o.asBits(13) ## clockArea.channel.io.o.asBits(12 downto 0)
+  io.DAC_DB := ~clockArea.channel.io.o.asBits(13) ## clockArea.channel.io.o.asBits(12 downto 0)
   
   //io.LEDG(1) := U(clockArea.channel.io.o)
 
