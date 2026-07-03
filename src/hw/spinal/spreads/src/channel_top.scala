@@ -2,7 +2,7 @@ package spreads
 
 import spinal.core._
 
-case class channel_top(signal_attenuation_shifts: Int, noise_level: Int) extends Component {
+case class channel_top() extends Component {
 
   ClockDomain.current.clock.setName("CLOCK_50")
   ClockDomain.current.reset.setName("reset")
@@ -13,7 +13,10 @@ case class channel_top(signal_attenuation_shifts: Int, noise_level: Int) extends
     val LEDG = out Bits(8 bits) setName("LEDG")
   }
 
-  val channel = Channel(signal_attenuation_shifts, noise_level)
+  val channel = Channel()
+  
+  channel.io.attenutation := U(io.SW(9) ## io.SW(8))
+  channel.io.noise := U(io.SW(7) ## io.SW(6) )
 
   channel.io.enable := io.SW(0)
   channel.io.i.assignFromBits(B(0, 5 bits) ## io.SW(9 downto 1))

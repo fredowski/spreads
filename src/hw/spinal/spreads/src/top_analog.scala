@@ -13,8 +13,9 @@ case class SpreadSpectrumTopAnalog(poly: List[Int], symbols_to_integrate: Int, s
   }
 
 
-  val ngen = Channel(signal_attenuation_shifts, 0)
-  
+  val ngen = Channel()
+  ngen.io.attenutation := signal_attenuation_shifts
+  ngen.io.noise := 0
   val rx = Receiver_Analog(poly.toArray, 10, 14, symbols_to_integrate)
 
   val txClockDomain = ClockDomain.external("clk_tx")
@@ -54,7 +55,7 @@ object genverilog extends App {
   } else if (target_name == "channel") {
     SpinalConfig(
       targetDirectory = target
-    ).generateVerilog(channel_top(4,0))
+    ).generateVerilog(channel_top())
 
   // } else if (target_name == "de1_adc") {
   //   SpinalConfig(
