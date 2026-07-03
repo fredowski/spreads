@@ -52,7 +52,7 @@ object genverilog extends App {
     SpinalConfig(
       targetDirectory = target
     ).generateVerilog(rx_top(List(9, 2), 0))
-  } else if (target_name == "channel") {
+  } else if (target_name == "channel_top") {
     SpinalConfig(
       targetDirectory = target
     ).generateVerilog(channel_top())
