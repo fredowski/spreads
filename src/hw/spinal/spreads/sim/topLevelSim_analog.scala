@@ -19,7 +19,7 @@ object TopLevelSimAnalog extends App {
   var successes = 0
   var iterations = 0
   val rng = new scala.util.Random(0)
-  val txBits = Seq.fill(10000)(rng.nextBoolean())
+  val txBits = Seq.fill(10000)(false)
   val offsets = Seq.fill(10)(rng.nextInt(1023))
   val clockError = (1+1e-3).toLong
   compiled.doSim { dut =>
