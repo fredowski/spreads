@@ -34,7 +34,7 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   inputRegVec(0) := io.signal
   inputRegVec(1) := inputRegVec(0)
 
-  var dll = DLL(accReg(0).getWidth, 1)
+  var dll = DLL(accReg(0).getWidth, 20)
 
   dll.io.early := accReg(0)
   dll.io.prompt := accReg(1)
@@ -50,7 +50,7 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
 
   val foundReg = Reg(False)
 
-  dll.io.enable := lfsr_tracking.io.flag
+  dll.io.enable := io.enable
 
   val maxReg = Reg(UInt((n_adc + m_lfsr + n_integrator) bits)) init(0)
   val seekerCount = 32
@@ -70,9 +70,6 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
     }
   }
 
-
-
-
   when(io.enable) {
     // Initialization of acquisition blocks
     when(initCounter<initCounter.maxValue) {
@@ -84,7 +81,6 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
         }
       }
     }
-
 
     // TODO general method using scala fold or similar
       when(lfsr_tracking.io.rnd_o(0) === False) {
@@ -115,6 +111,7 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
         } otherwise {
           io.data := (accReg(1) > 0)
         }
+        
         acc := Vec.fill(3)(0)
       }
     }
