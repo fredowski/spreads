@@ -44,7 +44,7 @@ object genverilog extends App {
   if (target_name == "top" || target_name == "SpreadSpectrumTopAnalog"){
     SpinalConfig(
       targetDirectory = target
-    ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2), 0, 3))
+    ).generateVerilog(SpreadSpectrumTopAnalog(List(9, 2), 0, 3, 5))
   } else if (target_name == "tx_top") {
     SpinalConfig(
       targetDirectory = target
@@ -70,5 +70,5 @@ object genvhdl extends App {
 
   SpinalConfig(
     targetDirectory = target
-  ).generateVhdl(SpreadSpectrumTopAnalog(List(9, 2), 0, 3))
+  ).generateVhdl(SpreadSpectrumTopAnalog(List(9, 2), 0, 3, 5))
 }
