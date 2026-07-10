@@ -43,7 +43,7 @@ case class rx_top(poly: List[Int], symbols_to_integrate: Int) extends Component 
   val clockArea = new ClockingArea(key0ResetClockDomain) {  
     val rx = Receiver_Analog(poly.toArray, 10, 14, symbols_to_integrate)
 
-    val decodedBits = ~io.ADC_DA.asUInt(13) ## io.ADC_DA.asUInt(12 downto 0) //init(0) 
+    val decodedBits = io.ADC_DA.asUInt(13) ## io.ADC_DA.asUInt(12 downto 0) //init(0) 
     rx.io.enable := io.SW(0)
     rx.io.signal := decodedBits.asSInt
     val dataReg = RegNextWhen(rx.io.data, rx.io.syncd) init(False)

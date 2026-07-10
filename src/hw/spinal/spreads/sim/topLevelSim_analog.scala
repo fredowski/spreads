@@ -12,7 +12,8 @@ object TopLevelSimAnalog extends App {
   // performance with correlation over multiple symbols seems to behave somewhat like the python model
   // TODO: Do actual statistics instead of guessing
   val signal_attenuation_shifts = 0
-  val compiled = SimConfig.withVerilator.withFstWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly, symbols_to_integrate-1, signal_attenuation_shifts))
+  val signal_noise = 5
+  val compiled = SimConfig.withVerilator.withFstWave.allOptimisation.workspacePath("sim_output").compile(new SpreadSpectrumTopAnalog(poly, symbols_to_integrate-1, signal_attenuation_shifts, signal_noise))
   
   val CHIPS = math.pow(2,10).toInt -1
   
