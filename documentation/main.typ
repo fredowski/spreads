@@ -48,6 +48,9 @@ Direct-Sequence spread spectrum (DSSS) modulation is the basis of
 
 = System Design
 
+The used FPGA development boards provide a $50 "MHz"$ clock, 
+which is selected as both the clock rate and the chip rate of the system. 
+
 == Code Acquisition
 
 === Exhaustive Search with linear Correlation
@@ -69,6 +72,46 @@ Used by every software implementation, also common in hardware.
 Delay-Locked loop
 
 Early, Prompt, and Late correlator
+
+= Simulations
+
+== Bit-Error Rate of an Ideal Receiver in the Presence of Noise
+
+#figure(
+  square(size: 10em, stroke: 2pt),
+  caption: [
+    BER of ideal receiver with decreasing signal-to-noise-ratio
+  ]
+)
+
+== Required Integration Period for successful Code Acquisition 
+
+#figure(
+  square(size: 10em, stroke: 2pt),
+  caption: [
+    Code Acquisition success rate within N signal periods with decreasing signal-to-noise-ratio
+  ]
+)
+
+The integration time required for code acquisition is in a linear relationship with the SNR: 
+
+$ "SNR" = (2nu T C \/N_0) /  sqrt(4nu)  = T sqrt(nu) C/N_0$
+
+Where $nu$ is the number of noncoherent integrations, $C/N_0$ is the Carrier-To-Noise ratio, and $T$ is the integration time.
+
+As the SNR decreases by 3dB, the required integration time doubles. @springer_sig_proc TODO: INSERT THEORETICAL ARGUMENT
+As the integration period is increased, the maximum frequency offset at which code acquisition is successful decreases 
+
+== Pseudo-AWGN generation
+
+#figure(
+  square(size: 10em, stroke: 2pt),
+  caption: [
+    Approximated PDF of generated noise
+  ]
+)
+
+== Impact of Quantization and Truncation
 
 = Implementation
 
@@ -130,10 +173,12 @@ Early, Prompt, and Late correlator
 Typical receivers rely on a finely adjustable PLL or numerically controlled oscillator (NCO) to match the receiver frequency to the transmitted signal frequency @springer_sig_proc.
 For this, either control signals emitted by the code acquisition and tracking modules, or a carrier tracking loop are used.
 The Cyclone II FPGA does not contain such fixed function blocks. While a fully digital implementation is possible on an FPGA without specialized hardware @adpll, it is considered out of scope for this project.
-Instead, for frequency tracking, the receiver reference code generator is periodically skipped forward or delayed by one cycle, whenever the accumulated error signal of the Code Tracking Block exceeds a chosen threshold.
-
+Instead, for frequency tracking, the receiver reference code generator is periodically skipped forward or delayed by one cycle,
+ whenever the accumulated error signal of the Code Tracking Block exceeds a chosen threshold.
 
 = Performance Analysis
+
+== Comparison of RTL Simulation and Real-World Measurement
 
 = Outlook
 
