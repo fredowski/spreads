@@ -51,9 +51,8 @@ case class channel_top() extends Component {
     io.LEDR(7) := io.SW(7)
     io.LEDR(8) := io.SW(8)
     io.LEDR(9) := io.SW(9)
-    channel.io.attenuation := U(io.SW(9) ## io.SW(8))
-    channel.io.noise := U(~io.SW(7) ## ~io.SW(6) )
-
+    channel.io.attenuation := U(io.SW(5) ## io.SW(4) ## io.SW(3) ## io.SW(2))
+    channel.io.noise := U(io.SW(9) ## io.SW(8) ## io.SW(7) ## io.SW(6)) 
     channel.io.enable := io.SW(0)
     channel.io.i := S(decodedBits);
     

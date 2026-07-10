@@ -7,8 +7,8 @@ case class Channel() extends Component {
   val io = new Bundle {
     val enable = in Bool ()
     val i = in SInt (14 bits)
-    val attenuation = in UInt (2 bits)
-    val noise = in UInt (2 bits)
+    val attenuation = in UInt (4 bits)
+    val noise = in UInt (4 bits)
     val o = out SInt (14 bits)
   }
 
