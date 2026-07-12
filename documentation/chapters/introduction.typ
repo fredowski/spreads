@@ -100,7 +100,7 @@ A DSSS transmitter multiplies each data bit $b in {+1,-1}$, held constant for on
 
 $ s[n] = b dot c[n], quad n = 0, dots, N_c - 1 $ #cite(<10498616>)
 
-where $N_c$ chips are transmitted per data bit. In hardware this multiplication is implemented as an XNOR between the data bit and the LFSR-generated chip, which is logically equivalent to $plus.minus 1$ multiplication on bipolar values, which is the basis of the Transmitter module in this project. In this project, $N_c = 1023$, matching the GPS C/A code length discussed below.
+where $N_c$ chips are transmitted per data bit. In hardware this multiplication is implemented as an XOR between the data bit and the LFSR-generated chip, which is logically equivalent to $plus.minus 1$ multiplication on bipolar values, which is the basis of the Transmitter module in this project. In this project, $N_c = 1023$, matching the GPS C/A code length discussed below.
 
 === Processing gain
 
