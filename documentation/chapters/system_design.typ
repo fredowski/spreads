@@ -102,12 +102,13 @@ During the design of the acquisition phase, there were ideas to use an FFT based
 
 
 = Implementation on FPGA
-#figure(
-    image("../images/full_setup.jpg", width: 80%),
+
+#align(left)[
+  #figure(
+    image("../images/full_setup.jpg", width: 100%),
     caption: [Full Setup on DE2 FPGAs],
-    placement: top,
-    scope: "parent",
-) <fpga-setup>
+  ) <fpga-setup>
+]
 The full setup on FPGAs is shown in image @fpga-setup. The transmitter is marked as `TX` on the left side of the image, connected to the channel in the middle. On the right, the receiver board then receives the data from the channel.
 The three FPGA boards are controlled via their onboard switches (SW) and buttons (KEY).
 For easier understanding, a table overview of the different FPGAs controls is given by a table:
