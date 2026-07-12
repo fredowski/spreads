@@ -78,7 +78,7 @@ Before the receiver can extract any data, it must find the exact code phase of t
 
 As seen in figure @receiver-block, the `Receiver_Analog` module instantiates an array of 32 parallel `Code_Acquisition` blocks. During initialization, a counter staggers the start times of these blocks so that each one searches a different slice (offset) of the possible code phases. Over a set number of integration symbols, each block correlates the incoming ADC signal with its locally generated LFSR sequence, accumulating the absolute values. 
 
-Once the integration period finishes, the system evaluates the blocks. The acquisition block that found the highest correlation peak (`maxReg`) wins. Its internal LFSR state is immediately routed to the `i_parallel` input of the main tracking LFSR, and a `load` command is issued. This instantly snaps the receiver's main tracking loop into coarse synchronization with the transmitter.
+Once the integration period finishes, the system evaluates the blocks. The acquisition block that found the highest correlation peak (`maxReg`) wins. It's internal LFSR state is routed to the `i_parallel` input of the main tracking LFSR, and a `load` command is issued. This overwrites the main LFSR's state with theLFSR state where the highest correlation was found. From there on, the main LFSR continues shifting in its usual mannter, to stay synchronized with the transmitter.
 
 === Alternatives to Exhaustive Search with Parallel Correlators
 
@@ -87,23 +87,23 @@ During the design of the acquisition phase, there were ideas to use an FFT based
 
 === Tracking and Demodulation
 
-Once synchronized, the receiver must continuously adjust its code phase to account for clock drift. This is implemented by using three parallel correlators: Early, Prompt, and Late. 
+Once synchronized, the receiver must constantly adjust its code phase to account for clock drift. This is implemented by using three parallel correlators: Early, Prompt, and Late. 
 
-The receiver takes the incoming ADC signal and passes it through a short shift register (`inputRegVec`), yielding three versions of the signal, the current immediate signal (Early), delayed by one cycle (Prompt), and delayed by two cycles (Late). These three signals are correlated simultaneously against the single output of the main tracking LFSR. 
+The receiver takes the incoming ADC signal and passes it through a short shift register (`inputRegVec`), resulting in three different versions of the signal. The current immediate signal (Early), delayed by one cycle (Prompt), and delayed by two cycles (Late). These three signals are correlated simultaneously against the single output of the main tracking LFSR. 
 
-At the end of each symbol, data bit,  period, the correlation results are passed into a Delay-Locked Loop (DLL). The DLL compares the absolute values of the three accumulators. If the Early or Late correlator is consistently stronger than the Prompt correlator, the DLL increments or decrements an internal 16-bit error register. 
+At the end of each symbol period, one data bit, the correlation results are passed into a Delay-Locked Loop (DLL). The DLL compares the absolute values of the three accumulators. If the Early or Late correlator is consistently stronger than the Prompt correlator, the DLL increments or decrements an internal 16-bit error register. 
 
-To prevent the system from overcorrecting due to random noise, the DLL requires this error register to cross a threshold before adjusting itself.  Should the threshold exceeded positively, the DLL issues an `advance` command. The receiver handles this by disabling the tracking LFSR for one cycle. This pauses it to let the incoming signal catch up.
+To prevent the system from correctly too quickly due to random noise, the DLL requires this error register to be higher than a given threshold before adjusting itself.  Should the threshold exceeded positively, the DLL issues an `advance` command. The receiver handles this by disabling the tracking LFSR for one cycle. This pauses it to let the incoming signal catch up.
 
-If instead the threshold is exceeded negatively, it issues a `delay` command, asserting the `skip` pin on the LFSR to jump an extra step forward.
+If instead the threshold is exceeded negatively, it gives an `delay` command, sending the `skip` signal to the LFSR to jump an extra step forward.
 
-While the DLL manages the timing, the actual data demodulation is simply read from the Prompt accumulator. If the accumulated value is greater than zero, a '1' is output and otherwise, a '0' is output.
+The actual data demodulation is read from the `Prompt` accumulator. If the accumulated value is greater than zero, a '1' is output and otherwise, a '0' is output.
 
 == Channel Emulation
 
 The channel is the middle part between the transmitter and receiver. Its is used to simulate a real-world environment by adding noise to the output of the transmitter, before the signal reaches the receiver.
 
-The channel applies two main effects onto the signal of the transmitter: attenuation and noise. Attenuation is implemented using an arithmetic right-shift on the 14-bit signal. This gives control over the signals amplitude.
+The channel applies two main effects onto the signal of the transmitter, the attenuation and noise. Attenuation is implemented using an arithmetic right-shift on the 14-bit signal. This gives control over the signals amplitude.
 
 Since the FPGA lacks floating-point units, the decision was made to use a simpler approximation based on the Central Limit Theorem for noise generation instead of proper AWGN.
 
