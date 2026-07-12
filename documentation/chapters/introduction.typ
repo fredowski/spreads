@@ -11,10 +11,32 @@ This projects documentation begins with the theoretical background needed to fol
 
 = Theoretical Background
 
-== Cross Correlation
-
 == Signals and Noise
 
-@shannon_noise
+The Shannon-Hartley-Theorem @shannon_noise
+
+$C = W log (1 + P/(N_0W))$
+
+states that for a given power $P$ and noise spectral density $N_0$, the channel capacity $C$ asymptotically approaches a certain limit with increasing channel bandwidth $W$, as shown in @shannon_graph. From this follows that a signal can be "spread" across the spectrum arbitrarily, without increasing transmit power, even though the total noise power in the channel increases.
+
+#figure(
+  image("../images/shannon.png"),
+  caption : [Channel capacity in relationship with the noise-equivalent bandwidth $W_0$ and actual bandwidth $W$, from @shannon_noise.]
+) <shannon_graph>
+
+To interfere with such a signal using a broadband jammer, the required power to reduce the received signal quality significantly can be arbitrarily large with increasing spreading factor, also referred to as processing gain
+
+$G = W_s/W$
+
+where $W$ is the signal bandwidth before, and $W_s$ the signal bandwidth after the spreading operation.
 
 == Direct-Sequence Spread Spectrum
+
+#figure(
+  image("../images/dsss_function.svg"),
+  caption: [],
+) <dsss_function>
+
+== Cross Correlation
+
+
