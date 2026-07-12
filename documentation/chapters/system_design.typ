@@ -4,7 +4,7 @@ The used FPGA development boards provide a $50 "MHz"$ clock, which is selected a
 
 The system itself has three main components, which this chapte describes in detail. The transmitter generates and sends out the spread signal, the channel simulates noise and tries to simulate a 'real world scenario', and the receiver acquires and tracks the spreading code to try to rebuild the original data from the transmitter.
 
-This chapter first introduces SpinalHDL as the implementation language, then the LFSR building block shared by every board, followed by the transmitter, receiver, and channel designs, and closes with the top-level FPGA integration and a discussion of the current design's known limitations.
+This chapter first gives a small overview, then introduces SpinalHDL as the implementation language, then the LFSR building block shared by every board, followed by the transmitter, receiver, and channel designs, and closes with the top-level FPGA integration and a discussion of the current design's known limitations.
 
 == System Overview
 
