@@ -4,6 +4,8 @@ The used FPGA development boards provide a $50 "MHz"$ clock, which is selected a
 
 The system itself has three main components, which this chapte describes in detail. The transmitter generates and sends out the spread signal, the channel simulates noise and tries to simulate a 'real world scenario', and the receiver acquires and tracks the spreading code to try to rebuild the original data from the transmitter.
 
+This chapter first introduces SpinalHDL as the implementation language, then the LFSR building block shared by every board, followed by the transmitter, receiver, and channel designs, and closes with the top-level FPGA integration and a discussion of the current design's known limitations.
+
 == System Overview
 
 The 3 main components of the system, the transmitter, the channel, and the receiver, also correspond to the 3 FPGA boards used, each component having its own FPGA board.
@@ -29,7 +31,7 @@ As seen in @system-block, the system chains three FPGAs together sequentially. T
 
 All designs in this system are written in SpinalHDL, no VHDL or Verilog was writting by hand in the final project. SpinalHDL is a hardware description language based on Scala. Hardware components are described as Scala classes, and the SpinalHDL compiler elaborates them at compile time into a synthesizable VHDL/Verilog. Then, Quartus is used for place and route and to programm onto the FPGA.
 
-Because SpinalHDL is embedded into the Scala language, standard Scala constructs likeloops, case classes, generics, and collections are all heavily used in the project to describing hardware. In SpinalHDL signals are typed as `SInt`, `UInt`, `Bool`, or Spinals custom types, for example `SpinalEnum`. Data width or type mismatches are caught by the compiler before simulation/synthesis run, which allows for faster debugging. This was used together with the `Metals` LSP server, which shows errors during writing also speeds up the debugging phase. // TODO cite METALs 
+Because SpinalHDL is embedded into the Scala language, standard Scala constructs likeloops, case classes, generics, and collections are all heavily used in the project to describing hardware. In SpinalHDL signals are typed as `SInt`, `UInt`, `Bool`, or Spinals custom types, for example `SpinalEnum`. Data width or type mismatches are caught by the compiler before simulation/synthesis run, which allows for faster debugging. This was used together with the `Metals` LSP server, which shows errors during writing also speeds up the debugging phase. // TODO cite METALs
 
 For verification, the project uses SpinalHDLs own simulation backend, which is used together with Verilator. This allows testbenches to be written directly in SpinalHDL/Scala, rather than writing the testbench in a separate VHDL/Verilgo file.
 
@@ -57,7 +59,13 @@ This latched data bit is then continuously XORed with the output bit of the LFSR
 
 The transmitter board has an external 14-bit DAC attached. If the spread chip evaluates to a logical `1`, it drives the maximum positive value of 14 bits, to the DAC. If false, it drives the minimum negative value instead.
 
-== Receiver Acquisition
+== Receiver Implementation
+
+The receiver is a more complex implementation, since it has to solve multiple problems on its own.
+It first has to find the transmitters code phase, and then stay aligned with it. So even if there is clock drift between the two boards, transmitter and receiver should still be aligned. The following subsections
+cover acquisition and tracking.
+
+=== Acquisition
 
 #figure(
   rotate(-90deg, reflow: true, image("../drawio/receiver.svg", width: 100%)),
@@ -72,8 +80,12 @@ As seen in figure @receiver-block, the `Receiver_Analog` module instantiates an 
 
 Once the integration period finishes, the system evaluates the blocks. The acquisition block that found the highest correlation peak (`maxReg`) wins. Its internal LFSR state is immediately routed to the `i_parallel` input of the main tracking LFSR, and a `load` command is issued. This instantly snaps the receiver's main tracking loop into coarse synchronization with the transmitter.
 
+=== Alternatives to Exhaustive Search with Parallel Correlators
 
-== Tracking and Demodulation
+During the design of the acquisition phase, there were ideas to use an FFT based correlation instead of out current approach. However, an FFT-based approad was deemed too resource-intensive for this board and running 32 parallel correlators with the unrolled LFSR was the most practical choice.
+
+
+=== Tracking and Demodulation
 
 Once synchronized, the receiver must continuously adjust its code phase to account for clock drift. This is implemented by using three parallel correlators: Early, Prompt, and Late. 
 
@@ -99,10 +111,6 @@ The channel instantiates five separate unrolled LFSRs, each with different lengt
 
 This allows control over noise and attenuation while the FPGAs are running.
 
-=== Alternatives to Exhaustive Search with Parallel Correlators.
-
-During the design of the acquisition phase, there were ideas to use an FFT based correlation instead of out current approach. However, an FFT-based approad was deemed too resource-intensive for this board and running 32 parallel correlators with the unrolled LFSR was the most practical choice. It also bypasses the need for heavy DSP calculations.
-
 == Top-Level Integration and controlling the FPGAs
 
 The top-level components, tx_top, rx_top, and channel_top, are used to tie the physical pins of the FPGA development boards to the implemented receiver, transmitter and channel designs. This allows for control over the different parts while the FPGAs are running, using the onboard switches. All boards share a base 50 MHz clock and utilize the KEY0 button for an asynchronous, active-low reset.
@@ -110,3 +118,16 @@ The top-level components, tx_top, rx_top, and channel_top, are used to tie the p
 Another addition at the top level is clock domain handling for the external 14-bit DAC and ADC. To ensure the DAC receives stable data and meets required setup and hold times, the tx_top module implements a falling-edge clock domain. The encoded output chips-bits of the transmitter are passed into this falling-edge buffer right before being driven out to the DAC pins.
 
 The top-levels of the system must also translate between different binary formats. The internal logic uses two's complement mathematics to easily handle positive and negative values. However, the external ADCs and DACs operate using offset binary and to convert between the two, the top-level modules invert the MSB of the output data. For example, in the transmitter, ~tx.io.coded.asBits(13) flips the sign bit before it is send out to the  DAC. The receiver then applies the same inversion to convert the ADCs offset binary back into twos complement for the tracking loops.
+
+
+== Known Limitations
+
+To reflect on a few design trade-offs, this section focuses on the known implementations.
+
+
+==== No re-acquisition after loss of lock
+
+The winning correlation value inside each individual acquisition engine, is only ever allowed to increase. Once the receiver has locked on, there is currently no mechanism to detect a lost faded signal and trigger a new acquisition search. Recovering currently requires an external reset press on the FPGAs button.
+
+// Dunno, maybe add more or remove the subchapter
+
