@@ -38,10 +38,6 @@
 
 #include "chapters/simulation.typ"
 
-#include "chapters/implementation.typ"
-
-#include "chapters/implementation.typ"
-
 #include "chapters/performance_analysis.typ"
 
 #include "chapters/outlook.typ"
