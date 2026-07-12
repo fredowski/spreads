@@ -6,12 +6,12 @@
     #text(size: 0.8em)[#emoji.pencil]  #text(it, fill: red, weight: 600)
   ]
 ]
-
+#set page(numbering: "1")
 
 #show: ieee.with(
   title: [],
   abstract: [
-    This project covers the design and hardware implementation of a baseband Direct-Sequence Spread Spectrum transmitter, receiver, as well as a AWGN channel emulator. Each of these three components is implemented on an Altera Cyclone II FPGA equipped with external 14-Bit DAC/ADCs. The real world performance of the system is compared to Monte Carlo simulations.
+    This project covers the design and hardware implementation of a 50 MHz baseband Direct-Sequence Spread Spectrum transmitter receiver, as well as a AWGN channel emulator. Each of these components is implemented using SpinalHDL and tested on an Altera Cyclone II FPGA equipped with external 14-Bit DAC/ADCs. To optimize design parameters, Monte-Carlo-Simulations are employed.
   ],
   authors: (
     (

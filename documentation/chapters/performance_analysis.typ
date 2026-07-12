@@ -9,8 +9,6 @@ To verify the function of each module, first, the transmitter is directly connec
   ]
 ) <tx_sig>
 
-
-
 Next, a $11"MHz"$ low-pass filter (LPF) is connected between the transmitter and the oscilloscope. The capture in @tx_sig_11 shows that the signal cannot reach the full level at every chip transition anymore.
 
 #figure(
@@ -62,7 +60,8 @@ Once we tuned the control loops of the receiver to a degree that they were able 
   ]
 ) <sync_wide> 
 
-@sync_narrow shows a more detailed view of this process. The time to acquire the signal using a single correlator is measured at $16"ms"$, which means the receiver computed roughly 750 correlations until the signal was acquired.
+@sync_narrow shows a more detailed view of this process. The time to acquire the signal using a single correlator is measured at $16"ms"$, thus the receiver computed roughly 750 correlations until the signal was acquired. To reduce the acquisition time, additional correlators were implemented. 32 Correlators cover the entire code space in 32 code periods, the expected time to lock is reduced to less than 1ms.
+Doubling the number of correlators again to 64, to halve the time to lock once more, exceeds the available hardware on the used FPGA.  
 
 #figure(
   image("../images/sync_zoomedin.png"),
@@ -70,3 +69,4 @@ Once we tuned the control loops of the receiver to a degree that they were able 
     Shorter time base capture of the receiver data output during initial code acquisition. The acquisition process took $16"ms"$.
   ]
 ) <sync_narrow> 
+

@@ -91,7 +91,7 @@ The top-levels of the system must also translate between different binary format
 To reflect on a few design trade-offs, this section focuses on the known implementations. \
 Typical receivers rely on a finely adjustable PLL or numerically controlled oscillator (NCO) to match the receiver frequency to the transmitted signal frequency @springer_sig_proc.
 For this, either control signals emitted by the code acquisition and tracking modules, or a carrier tracking loop are used.
-The Cyclone II FPGA does not contain such fixed function blocks. While a fully digital implementation is possible on an FPGA without specialized hardware @adpll, it is considered out of scope for this project.
+The Cyclone II FPGA does not contain such fixed function blocks @fpga_manual. While a fully digital implementation is possible on an FPGA without specialized hardware @adpll, it is considered out of scope for this project.
 Instead, for frequency tracking, the receiver reference code generator is periodically skipped forward or delayed by one cycle, whenever the accumulated error signal of the Code Tracking Block exceeds a chosen threshold.
 
 === No re-acquisition after loss of lock

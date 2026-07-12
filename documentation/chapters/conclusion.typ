@@ -1,6 +1,6 @@
 = Conclusion
 
-This project successfully designed and implemented a complete DSSS communication system in hardware. By splitting the project into three parts, across three DE2 FPGA boards, the project covered a working transmitter, an adjustable noise generator, and a receiver that handles both code acquisition and tracking.
+This project successfully designed and implemented a complete DSSS communication system in hardware. By splitting the project into three parts, across three DE1 FPGA boards, the project covered a working transmitter, an adjustable noise generator, and a receiver that handles both code acquisition and tracking.
 
 == Direct-Sequence Spread Spectrum Conclusion
 The implementation of the DSSS system proved that the theoretical concepts translate well into a working hardware design. Despite the limitations of a strict 50 MHz clock and no floating-point math, the main logic worked as expected and the receiver managed to correctly receive data from the transmitter. Even when connection the channel between transmitter and receiver, the receiver was still able to find the correct code phase. Once locked, the Delay-Locked Loop was able to successfully track the signal and recover the original data bits. In conclusion, while there is room for future optimization, such as implementing a formal loop filter or automatic re-acquisition, the DSSS system still works in its current state.
