@@ -4,7 +4,7 @@
 
 A test sequence of random bits is generated and encoded. Then, random gaussian noise is added so that
 #v(0.2em)
-$"SNR" = S^2/N^2 = 1/sigma^2$ 
+$ "SNR" = S^2/N^2 = 1/sigma^2 $ 
 #v(0.2em)
 where $S^2 = 1$ is the power of the signal and $sigma^2$ is the power of the noise.
 
@@ -31,7 +31,7 @@ The result is shown in @ber_vs_snr. Up to a SNR of $-20"dB"$, the BER is insigni
 
 The integration time required for code acquisition is in a linear relationship with the SNR@springer_sig_proc: 
 #v(0.2em)
-$ "SNR" = T sqrt(nu) C/N_0$
+$ "SNR" = T sqrt(nu) C/N_0 $
 
 where $C/N_0$ is the Carrier-To-Noise ratio, $T$ is the integration time, and $nu$ is the number of averaged noncoherent integrations.
 As the SNR decreases by 3dB, the required integration time doubles.
@@ -40,7 +40,7 @@ As the SNR decreases by 3dB, the required integration time doubles.
 
 Increasing the coherent integration time $T$ comes with the following downside: As $T$ increases, the residual frequency offset $delta f$ between transmitter and receiver gets accumulated, eventually leading to a decreased correlator result. To avoid this, 
 #v(0.2em)
-$T < (T_C - delta tau_"initial")/T_C dot delta f$
+$ T < (T_C - delta tau_"initial")/T_C dot delta f $
 
 should be observed, where $T_C$ is the chip period and $delta tau_"initial"$ is the time offset at the beginning of the correlator integration period, with $delta tau_"initial" << T_C$ for a correlator that successfully "finds" the transmitted signal.
 
