@@ -61,6 +61,7 @@ Before the receiver can extract any data, it must find the exact code phase of t
     image("../drawio/code_acquisition.drawio.pdf", width: 100%),
     caption: [Simplified diagram of the code acquisition block. N parallel correlators are implemented, each shifted by an equal delay to cover the entire code search space. Whenever a new maximum correlation value is found, the code detected line outputs a positive pulse.],
 ) <acquisition-block>
+
 Each of the N correlators in @acquisition-block holds is an LFSR of the same spreading code polynominal as the transmitter. The correlators are delayed by `i*CODE_LEN/N` chips relative to correlator 0, so that together the N correlators cover the entire code period. Each correlator multiplies its delayed code replica with the sampled signal and integrates the result over one code period, marked as "Integrate & Dump" in @acquisition-block. At the end of every code period, this new correlation value is compared against the previous maximum. Should it be higher, "New Maximum?" is asserted and the code detected signal is pulled to `high`. The local code replica is then advanced by one additional chip before the next code period begins, so that over time each correlator sweeps across its assigned slice of the code phase. \
 As seen in @acquisition-block, the `Receiver_Analog` module instantiates an array of 32 parallel `Code_Acquisition` blocks. Each of these blocks has a different code phase offset, the individual blocks then correlates the incoming ADC signal with its locally generated LFSR sequence, accumulating the absolute values. \
 Once every possible offset has been tested, the system evaluates the `Code_Acquisition` blocks. The acquisition block that found the highest correlation peak (`maxReg`) wins. Its internal LFSR state is routed to the `i_parallel` input of the main tracking LFSR, and a `load` command is issued. \
@@ -92,13 +93,18 @@ The top-levels of the system must also translate between different binary format
 == Known Limitations
 To reflect on a few design trade-offs, this section focuses on the known implementations.
 
-==== No re-acquisition after loss of lock
+Typical receivers rely on a finely adjustable PLL or numerically controlled oscillator (NCO) to match the receiver frequency to the transmitted signal frequency @springer_sig_proc.
+For this, either control signals emitted by the code acquisition and tracking modules, or a carrier tracking loop are used.
+The Cyclone II FPGA does not contain such fixed function blocks. While a fully digital implementation is possible on an FPGA without specialized hardware @adpll, it is considered out of scope for this project.
+Instead, for frequency tracking, the receiver reference code generator is periodically skipped forward or delayed by one cycle, whenever the accumulated error signal of the Code Tracking Block exceeds a chosen threshold.
+
+=== No re-acquisition after loss of lock
 The winning correlation value inside each individual acquisition engine, is only ever allowed to increase. Once the receiver has locked on, there is currently no mechanism to detect a lost faded signal and trigger a new acquisition search. Recovering currently requires an external reset press on the FPGAs button.
 
-==== Alternatives to Exhaustive Search with Parallel Correlators
+=== Alternatives to Exhaustive Search with Parallel Correlators
 During the design of the acquisition phase, there were ideas to use an FFT based correlation instead of out current approach. However, an FFT-based approad was deemed too resource-intensive for this board and running 32 parallel correlators with the unrolled LFSR was the most practical choice.
 
-// Dunno, maybe add more or remove the subchapter
+
 
 
 = Implementation on FPGA
