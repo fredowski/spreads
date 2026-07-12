@@ -39,7 +39,7 @@ As the integration period is increased, the maximum frequency offset at which co
 #figure(
     image("../images/PDF_Of_Channel.svg"),
     caption: [
-    Approximated PDF of generated noise. The extreme bins, containing the maximum and minimum of the 14-bit signed integer value, respectively, show a slightly inflated ocurrence due to the applied clipping function.
+    Approximated PDF of generated noise. The extreme bins, containing the maximum and minimum of the 14-bit signed integer value, respectively, show a slightly inflated ocurrence due to the applied saturating addition function.
   ]
 )
 
