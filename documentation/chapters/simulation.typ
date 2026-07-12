@@ -3,9 +3,16 @@
 == Bit-Error Rate of an Ideal Receiver in the Presence of Noise
 
 #figure(
-  square(size: 10em, stroke: 2pt),
+  square(size: 10em, stroke: 2pt, image("../images/BER_vs_SNR__Binary_Noise.svg"),),
   caption: [
     BER of ideal receiver with decreasing signal-to-noise-ratio
+  ]
+)
+
+#figure(
+  square(size: 10em, stroke: 2pt, image("../images/BER_vs_SNR__Binary_Noise.svg"),),
+  caption: [
+    Simulated BER vs. SNR performance under AWGN and binary noise
   ]
 )
 
@@ -30,8 +37,8 @@ As the integration period is increased, the maximum frequency offset at which co
 == Pseudo-AWGN generation
 
 #figure(
-  square(size: 10em, stroke: 2pt),
-  caption: [
+    square(size: 10em, stroke: 2pt, image("../images/PDF_Of_Channel.svg")),
+    caption: [
     Approximated PDF of generated noise
   ]
 )
