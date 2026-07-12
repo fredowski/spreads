@@ -86,7 +86,7 @@ states that for a given power $P$ and noise spectral density $N_0$, the channel 
   caption : [Channel capacity in relationship with the noise-equivalent bandwidth $W_0$ and actual bandwidth $W$, from @shannon_noise.]
 ) <shannon_graph>
 
-To interfere with such a signal using a broadband jammer, the required power to reduce the received signal quality significantly can be arbitrarily large with increasing spreading factor, also referred to as processing gain
+Because the signal is spread across a wide frequency band, it becomes highly resistant to narrow-band interference and background noise. To significantly degrade the received signal, an interference source would have to inject massive amounts of power across the entire spread bandwidth. This resilience is quantified by the spreading factor, more commonly referred to as the processing gain:
 
 $ G = W_s/W $
 
