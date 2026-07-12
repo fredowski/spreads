@@ -1,36 +1,36 @@
 = System Design and Implementation
-The used FPGA development boards provide a $50 "MHz"$ clock, which is selected as both the system clock rate and the chip rate of the spreading sequence. The decision to use the maximum available clock was made during early project meetings to be 'as fast as possible', which reflects using the $50 "MHz"$ clock for both receiver and transmitter. \
-The system itself has three main components, the transmitter generates and sends out the spread signal, the channel simulates noise and tries to simulate a 'real world scenario', and the reciver acquires and tracks the spreading code to try to rebuild the original data from the transmitter. This chapter describes the main components implementation and the whole system overview in detail. \ 
+The Cyclone II FPGA development boards provide a $50 "MHz"$ clock, which is selected as both the system clock rate and the chip rate of the spreading sequence. The decision to use the maximum available clock was made during early project meetings to be as 'fast as possible'. \
+The system itself has three main components, the transmitter generates and sends out the spread signal, the channel simulates noise and tries to simulate a 'real world scenario', and the receiver acquires and tracks the spreading code to try to rebuild the original data from the transmitter. This chapter describes the main components implementation and the whole system overview in detail. \ 
 The chapter begins with a small overview, then introduces SpinalHDL as the implementation language, next the generation of the spreading sequence generation using LFSRs, followed by the transmitter, receiver, and channel designs, and closes with the top-level FPGA integration and a discussion of the current design's known limitations.
 
 == System Overview
 
 The 3 main components of the system, the transmitter, the channel, and the receiver, also correspond to the three FPGA boards used, each component having its own FPGA board. \
 The transmitter begins by sending out data. It spreads a single data bit into 1023 chips. For the receiver to be synchronized, the transmitter and receiver have to use the same spreading code, generated from the same LFSR polynomial. The transmitter then sends out these chips through its onboard 14 bit DAC.
-Between the transmitter and receiver lies the channel. It is made to create artificial noise. This allows to simulate a real world environment. The channel is implemented in a way to make it adjustable on the fly. so users can adjust the attenuation and noise of the signal during system runtime on the FPGA boards by using onboard switches. \ 
+Between the transmitter and receiver lies the channel. It is made to create artificial noise, which allows simulation of a real world environment. The channel is implemented in a way to make it adjustable on the fly. so users can adjust the attenuation and noise of the signal during system runtime on the FPGA boards by using onboard switches. \ 
 The receiver is the most complex part of the system. It receives chips either directly from the transmitter or, usually, from the channel, on its ADC input. It has to try to stay in sync with the transmitter at all times. \ 
 A transmission begins with the having to find the transmitters code phase in the first place. This is done by acquisition, where many correlators, each checking a different offset of the LFSR, run in parallel and search for the offset that gives the strongest correlation. Once an offset clearly stands out from the rest, the receiver uses that offset and considers itself synced and begins tracking. \ 
-The receiver has to use the same polynomial as the transmitter for its own LFSR, else, they could never sty synced. In this projects implementation, three different correlators are run in parallel. One for the expected current bit in the LFSR, one for the previous bit, and one for the next bit in time. We compare each correlators results, and if the earlier or later correlator shows a much better result than the current one, we shift the LFSR forward, or step it back. \ 
+The receiver has to use the same polynomial as the transmitter for its own LFSR, else they could never stay synced. In this projects implementation, three different correlators are run in parallel. One for the expected current bit in the LFSR, one for the previous bit, and one for the next bit in time. We compare each correlators results, and if the earlier or later correlator shows a much better result than the current one, we shift the LFSR forward, or step it back. \ 
 This allows us to continuously adjust the LFSR index and correct possible synchronization mistakes.
 
 #figure(
     image("../drawio/System-Overview.svg", width: 80%),
     caption: [System Overview],
-    placement: bottom,
+    placement: top,
     scope: "parent",
 ) <system-block>
-As seen in @system-block, the system chains three FPGAs together sequentially. The transmission FPGA outputs the 14-bit chip code directly onto the channel FPGA. This middle channel board then adds the artificial interference, passing the resulting 14-bit chip code mixed with noise into the receiver FPGA for signal acquisition and tracking. \
+As shown in @system-block, the system chains three FPGAs together sequentially. Because the ADCs use a 14-bit resolution, the transmitter FPGA outputs the 14-bits, representing one chip, to the channel FPGA. This middle channel board then adds the artificial interference, passing the resulting 14-bit chip code mixed with noise into the receiver FPGA for signal acquisition and tracking. \
 == SpinalHDL
 
-All designs in this system are written in SpinalHDL, no VHDL or Verilog was writting by hand in the final project. SpinalHDL is a hardware description language based on Scala. Hardware components are described as Scala classes, and the SpinalHDL compiler elaborates them at compile time into a synthesizable VHDL/Verilog. Then, Quartus is used for place and route and to programm onto the FPGA. \
-Because SpinalHDL is embedded into the Scala language, standard Scala constructs like loops, case classes, generics, and collections are all heavily used in the project to describing hardware. In SpinalHDL signals are typed as `SInt`, `UInt`, `Bool`.
-A benefit of using SpinalHDL together with a common Scala language server, like `Metals` is that data width or type mismatches are caught during writing. Another benefit is that when compiling SpinalHDL to Verilog/VHDL, the compiler catches errors before simulation/synthesis runs, which allows for faster debugging. \ 
-For verification, the project uses SpinalHDLs own simulation backend, which is used together with `Verilator`. This allows testbenches to be written directly in SpinalHDL/Scala, rather than writing the testbench in a separate VHDL/Verilgo file.
+All designs in this system are written in SpinalHDL, no VHDL or Verilog was writting by hand. SpinalHDL is a hardware description language based on Scala. Hardware components are described as Scala classes, and the SpinalHDL compiler elaborates them into a synthesizable VHDL/Verilog code. Then, Quartus is used for place and route and to programm onto the FPGA. \
+Because SpinalHDL is embedded into the Scala language, standard Scala constructs like loops, case classes, generics, and collections are all heavily used in the project. \
+A benefit of using SpinalHDL is that the compiler catches errors before simulation/synthesis runs, which allows for faster debugging. \ 
+For verification, the project uses SpinalHDLs own simulation backend, which is used together with `Verilator`. This allows testbenches to be written directly in SpinalHDL/Scala, rather than writing the testbench in a separate VHDL/Verilog file.
 
 == Spreading Sequence Generation
 
 The spreading code used throughout the system is generated by an unrolled LFSR class. This LFSR unrolls the feedback logic to produce a full parallel output every cycle. Compared to regular LFSRs, the difference is that we do not just output the resulting bit of the LFSR, but every output of each `tap`, of the LFSR.
-The polynomial itself is passed as an array of tap positions. Each entry in the array represents the exponent of a tap in the polynomial, meaning the polynomial of the LFSR is not hardcoded, but adjustable on compile time. \ 
+The polynomial itself is passed as an array of tap positions. Each entry in the array represents the exponent of a tap in the polynomial. Because of this, the polynomial of the LFSR is not hardcoded, but adjustable on compile time. \ 
 Since we are limited to a 50 MHz clock on both receiver and transmitter, we cannot rely on a faster internal oversampling clock to process multiple LFSR shifts per chip. Instead, the entire state of the `UnrollLFSR` is exposed at once. This allows to advance the LFSR by standard steps, or to use a `skip` signal to jump an extra step forward in a single clock cycle, which shifts the LFSR's relative phase without needing a faster tracking clock.
 
 == Transmitter Implementation
@@ -38,7 +38,7 @@ Since we are limited to a 50 MHz clock on both receiver and transmitter, we cann
 #figure(
     image("../drawio/transmitter.svg", width: 80%),
     caption: [Transmitter block diagramm],
-    placement: top,
+    placement: bottom,
     scope: "parent",
 ) <transmitter-block>
 As seen in @transmitter-block, the transmitter architecture applies the spreading code to the user input data and send the individual chips out. \
@@ -53,7 +53,7 @@ It first has to find the transmitters code phase, and then stay aligned with it.
     image("../drawio/receiver_overview.drawio.pdf"),
     caption: [Overview of the basic building blocks of the receiver. The analog baseband input gets sampled by the ADC. The code acquisition block finds the maximum correlation offset of a local code replica with the signal, at which point the tracking and decode block is enabled.],
 ) <receiver-overview> 
-As shown in @receiver-overview, the sampled ADC output first feeds the code acquisition block. Once that block reports the code as detected, the code tracking & decode block is enabled and takes over, continuously demodulating the incoming chips into binary data. The following two subsections, Acquisition and Tracking and Demodulation, describe each of these two blocks in turn.
+As shown in @receiver-overview, the sampled ADC output first feeds the code acquisition block. Once that block reports the code as detected, the code 'tracking & decode' block is enabled and takes over, decoding the incoming chip stream back into binary data. The following subsections, 'Acquisition' and 'Tracking and Demodulation', describe these in more detail.
 
 === Acquisition
 Before the receiver can extract any data, it must find the exact code phase of the incoming signal. This is the reason we use the spreading code.
@@ -62,11 +62,9 @@ Before the receiver can extract any data, it must find the exact code phase of t
     caption: [Simplified diagram of the code acquisition block. N parallel correlators are implemented, each shifted by an equal delay to cover the entire code search space. Whenever a new maximum correlation value is found, the code detected line outputs a positive pulse.],
 ) <acquisition-block>
 
-Each of the N correlators in @acquisition-block holds is an LFSR of the same spreading code polynominal as the transmitter. The correlators are delayed by `i*CODE_LEN/N` chips relative to correlator 0, so that together the N correlators cover the entire code period. Each correlator multiplies its delayed code replica with the sampled signal and integrates the result over one code period, marked as "Integrate & Dump" in @acquisition-block. At the end of every code period, this new correlation value is compared against the previous maximum. Should it be higher, "New Maximum?" is asserted and the code detected signal is pulled to `high`. The local code replica is then advanced by one additional chip before the next code period begins, so that over time each correlator sweeps across its assigned slice of the code phase. \
-As seen in @acquisition-block, the `Receiver_Analog` module instantiates an array of 32 parallel `Code_Acquisition` blocks. Each of these blocks has a different code phase offset, the individual blocks then correlates the incoming ADC signal with its locally generated LFSR sequence, accumulating the absolute values. \
-Once every possible offset has been tested, the system evaluates the `Code_Acquisition` blocks. The acquisition block that found the highest correlation peak (`maxReg`) wins. Its internal LFSR state is routed to the `i_parallel` input of the main tracking LFSR, and a `load` command is issued. \
-This overwrites the main LFSR's state with the LFSR state where the highest correlation was found. From there on, the main LFSR continues shifting in its usual manner, to stay synchronized with the transmitter.
-
+Each of the N correlators in @acquisition-block contains an LFSR configured with the same spreading code polynomial as the transmitter. The correlators are delayed by `i*CODE_LEN/N` chips relative to correlator 0, so that together the N correlators cover the entire code period. Each correlator multiplies its delayed code replica with the sampled signal and integrates the result over one code period, marked as "Integrate & Dump" in @acquisition-block. At the end of every code period, this new correlation value is compared against the previous maximum. Should it be higher, "New Maximum?" is asserted and the code detected signal is pulled to `high`. The local code replica is then advanced by one additional chip before the next code period begins, so that over time each correlator sweeps across its assigned slice of the code phase. \
+Once every possible offset has been tested, the system evaluates the `Code_Acquisition` blocks. The acquisition block that found the highest correlation peak (`maxReg`) wins. Its internal LFSR state is put on the `i_parallel` input of the main tracking LFSR, and a `load` command is issued, to load it in and use it. \
+This overwrites the main LFSRs state with the LFSR state where the highest correlation was found. From there on, the main LFSR continues shifting in its usual manner to stay synchronized with the transmitter. In this projects implementation, the `Receiver_Analog` module instantiates an array of 32 of these parallel `Code_Acquisition` blocks to perform this search.
 === Tracking and Demodulation
 Once synchronized, the receiver must constantly adjust its code phase to account for clock drift. This is implemented by using three parallel correlators: Early, Prompt, and Late. \
 The receiver takes the incoming ADC signal and passes it through a short shift register (`inputRegVec`), resulting in three different versions of the signal. The current immediate signal (Early), delayed by one cycle (Prompt), and delayed by two cycles (Late). These three signals are correlated simultaneously against the single output of the main tracking LFSR. \
@@ -74,25 +72,23 @@ At the end of each symbol period, one data bit, the correlation results are pass
 To prevent the system from correcting too quickly due to random noise, the DLL requires this error register to be higher than a given threshold before adjusting itself. \
 Should the threshold exceeded positively, the DLL issues an `advance` command. The receiver handles this by disabling the tracking LFSR for one cycle. This pauses it to let the incoming signal catch up.
 If instead the threshold is exceeded negatively, it gives a `delay` command, sending the `skip` signal to the LFSR to jump an extra step forward. \ 
-The actual data demodulation is read from the `Prompt` accumulator. If the accumulated value is greater than zero, a '1' is output and otherwise, a '0' is output.
-
+The actual data demodulation is read from the `Prompt` accumulator. If the accumulated value is greater than zero, a '1' is output and otherwise, a '0' is output.\
+The whole setup of the receiver can be seen in the @receiver-block, which shows all the parts described in this section as one block diagram.
 == Channel Emulation
 The channel is the middle part between the transmitter and receiver. Its is used to simulate a real-world environment by adding noise to the output of the transmitter, before the signal reaches the receiver. \
 The channel applies two main effects onto the signal of the transmitter, the attenuation and noise. Attenuation is implemented using an arithmetic right-shift on the 14-bit signal. This gives control over the signals amplitude. \
 Since the FPGA lacks floating-point units, the decision was made to use a simpler approximation based on the Central Limit Theorem for noise generation instead of proper AWGN. \
-The channel instantiates five separate unrolled LFSRs, each with different lengths and feedback polynomials. This makes sure that the sequences of the LFSRs are uncorrelated. By continuously adding up the outputs of the five pseudorandom LFSR generators, the resulting noise approximates a Gaussian distribution. This resulting noise value can then be based on the desired noise floor and added to the attenuated signal during runtime. \
-This allows control over noise and attenuation while the FPGAs are running.
+The channel instantiates five separate unrolled LFSRs, each with different lengths and feedback polynomials. This makes sure that the sequences of the LFSRs are uncorrelated. By continuously adding up the outputs of the five pseudorandom LFSR generators, the resulting noise approximates a Gaussian distribution. This resulting noise value can then be based on the desired noise floor and added to the attenuated signal during runtime. This allows control over noise and attenuation while the FPGAs are running.
 
 == Top-Level Integration and controlling the FPGAs
 
-The top-level components, tx_top, rx_top, and channel_top, are used to tie the physical pins of the FPGA development boards to the implemented receiver, transmitter and channel designs. This allows for control over the different parts while the FPGAs are running, using the onboard switches. All boards share a base 50 MHz clock and utilize the KEY0 button for an asynchronous, active-low reset. \
+The top-level components, tx_top, rx_top, and channel_top, are used to tie the physical pins of the FPGA development boards to the implemented receiver, transmitter and channel designs. The top-level are all still implemented in SpinalHDL, and pins are assigned using the `set_name()` method of SpinalHDL, which allows is to name the I/O signals to the correct pins. \ 
 Another addition at the top level is clock domain handling for the external 14-bit DAC and ADC. To ensure the DAC receives stable data and meets required setup and hold times, the tx_top module implements a falling-edge clock domain. The encoded output chips-bits of the transmitter are passed into this falling-edge buffer right before being driven out to the DAC pins. \
 The top-levels of the system must also translate between different binary formats. The internal logic uses two's complement mathematics to easily handle positive and negative values. However, the external ADCs and DACs operate using offset binary and to convert between the two, the top-level modules invert the MSB of the output data. For example, in the transmitter, ~tx.io.coded.asBits(13) flips the sign bit before it is send out to the  DAC. The receiver then applies the same inversion to convert the ADCs offset binary back into twos complement for the tracking loops.
 
 
 == Known Limitations
-To reflect on a few design trade-offs, this section focuses on the known implementations.
-
+To reflect on a few design trade-offs, this section focuses on the known implementations. \
 Typical receivers rely on a finely adjustable PLL or numerically controlled oscillator (NCO) to match the receiver frequency to the transmitted signal frequency @springer_sig_proc.
 For this, either control signals emitted by the code acquisition and tracking modules, or a carrier tracking loop are used.
 The Cyclone II FPGA does not contain such fixed function blocks. While a fully digital implementation is possible on an FPGA without specialized hardware @adpll, it is considered out of scope for this project.
@@ -107,17 +103,17 @@ During the design of the acquisition phase, there were ideas to use an FFT based
 
 
 
-= Implementation on FPGA
+== Implementation on FPGA
 
 #align(left)[
   #figure(
     image("../images/full_setup.jpg", width: 100%),
-    caption: [Full Setup on DE2 FPGAs],
+    caption: [Full Setup on Cyclone II FPGAs],
   ) <fpga-setup>
 ]
 The full setup on FPGAs is shown in image @fpga-setup. The transmitter is marked as `TX` on the left side of the image, connected to the channel in the middle. On the right, the receiver board then receives the data from the channel.
 The three FPGA boards are controlled via their onboard switches (SW) and buttons (KEY).
-For easier understanding, a table overview of the different FPGAs controls is given by a table:
+For easier understanding, a table overview of the different FPGAs controls is given:
 
 #figure(
     table(
