@@ -28,6 +28,15 @@ brew install verilator openjdk && brew install --cask gtkwave
 
 To setup SpinalHDL, it is advised to use the SpinalHDL [installation guide](https://spinalhdl.github.io/SpinalDoc-RTD/master/SpinalHDL/Getting%20Started/Install%20and%20setup.html).
 
+# Virtual environment setup
+
+```bash
+cd modeling/
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 --- 
 
 # Directory structure overview
