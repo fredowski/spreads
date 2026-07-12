@@ -62,8 +62,12 @@ The transmitter board has an external 14-bit DAC attached. If the spread chip ev
 == Receiver Implementation
 
 The receiver is a more complex implementation, since it has to solve multiple problems on its own.
-It first has to find the transmitters code phase, and then stay aligned with it. So even if there is clock drift between the two boards, transmitter and receiver should still be aligned. The following subsections
-cover acquisition and tracking.
+It first has to find the transmitters code phase, and then stay aligned with it. So even if there is clock drift between the two boards, transmitter and receiver should still be aligned.
+
+#figure(
+  image("../drawio/receiver_overview.drawio.pdf"),
+  caption: [Overview of the basic building blocks of the receiver. The analog baseband input gets sampled by the ADC. The code acquisition block finds the maximum correlation offset of a local code replica with the signal, at which point the tracking and decode block is enabled.]
+)
 
 === Acquisition
 
@@ -75,6 +79,11 @@ cover acquisition and tracking.
 ) <receiver-block>
 
 Before the receiver can extract any data, it must find the exact code phase of the incoming signal. This is the reason we use the spreading code.
+
+#figure(
+  image("../drawio/code_acquisition.drawio.pdf"),
+  caption: [Simplified diagram of the code acquisition block. N parallel correlators are implemented, each shifted by an equal delay to cover the entire code search space. Whenever a new maximum correlation value is found, the code detected line outputs a positive pulse.]
+) <acquisition-block>
 
 As seen in figure @receiver-block, the `Receiver_Analog` module instantiates an array of 32 parallel `Code_Acquisition` blocks. During initialization, a counter staggers the start times of these blocks so that each one searches a different slice (offset) of the possible code phases. Over a set number of integration symbols, each block correlates the incoming ADC signal with its locally generated LFSR sequence, accumulating the absolute values. 
 

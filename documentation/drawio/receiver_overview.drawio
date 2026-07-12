@@ -1,0 +1,58 @@
+<mxfile host="Electron">
+  <diagram name="Page-1" id="4KNfltfKkrUHAZWXk9F1">
+    <mxGraphModel dx="857" dy="578" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-6" edge="1" parent="1" source="WtSpiB0CtcPQF5lvMT4f-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="WtSpiB0CtcPQF5lvMT4f-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-7" connectable="0" parent="WtSpiB0CtcPQF5lvMT4f-6" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Code Detected?" vertex="1">
+          <mxGeometry relative="1" x="0.1136" as="geometry">
+            <mxPoint y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-1" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="Code Acquisition" vertex="1">
+          <mxGeometry height="80" width="80" x="300" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-9" edge="1" parent="1" source="WtSpiB0CtcPQF5lvMT4f-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="420" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-12" connectable="0" parent="WtSpiB0CtcPQF5lvMT4f-9" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Binary Data&lt;br&gt;Output" vertex="1">
+          <mxGeometry relative="1" x="0.1333" y="2" as="geometry">
+            <mxPoint x="47" y="2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-2" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="Code Tracking&lt;div&gt;&amp;amp;&lt;br&gt;Decode&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="80" x="300" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-4" edge="1" parent="1" source="WtSpiB0CtcPQF5lvMT4f-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="WtSpiB0CtcPQF5lvMT4f-2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-5" edge="1" parent="1" source="WtSpiB0CtcPQF5lvMT4f-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="WtSpiB0CtcPQF5lvMT4f-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-13" connectable="0" parent="WtSpiB0CtcPQF5lvMT4f-5" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="14 bit&lt;br&gt;SINT" vertex="1">
+          <mxGeometry relative="1" x="-0.8183" as="geometry">
+            <mxPoint x="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-10" edge="1" parent="1" source="WtSpiB0CtcPQF5lvMT4f-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;startArrow=block;startFill=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="90" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-11" connectable="0" parent="WtSpiB0CtcPQF5lvMT4f-10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Baseband&lt;br&gt;Input" vertex="1">
+          <mxGeometry relative="1" x="0.544" y="2" as="geometry">
+            <mxPoint x="-11" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WtSpiB0CtcPQF5lvMT4f-3" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="ADC" vertex="1">
+          <mxGeometry height="80" width="80" x="140" y="280" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

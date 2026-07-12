@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 
 class UnrollLFSR:
-    def __init__(self, size, taps, steps, n_out=14):
+    def __init__(self, size, taps, steps, n_out=12):
         self.size = size
         self.mask = (1 << size) - 1
         self.taps = taps
@@ -31,22 +31,24 @@ class UnrollLFSR:
             
         return val
 
-lfsr0 = UnrollLFSR(size=30, taps=[29, 22, 1, 0], steps=14)
+lfsr0 = UnrollLFSR(size=30, taps=[29, 22, 1, 0], steps=12)
 lfsr1 = UnrollLFSR(size=31, taps=[30, 26, 22, 18, 14, 10, 9, 8, 6, 5, 4, 2, 1, 0], steps=1)
 lfsr2 = UnrollLFSR(size=32, taps=[31, 21, 1, 0], steps=2)
 lfsr3 = UnrollLFSR(size=32, taps=[31, 21, 20, 19, 17, 16, 14, 12, 11, 9, 7, 5, 3, 0], steps=3)
 lfsr4 = UnrollLFSR(size=32, taps=[31, 27, 18, 17, 15, 13, 10, 9, 8, 5, 4, 0], steps=1)
 
-num_samples = 100_000
+num_samples = 100_000_0
 noise_samples = np.zeros(num_samples, dtype=np.int32)
 
 for i in range(num_samples):
     X = lfsr0.get_output() + lfsr1.get_output() + lfsr2.get_output() + lfsr3.get_output() + lfsr4.get_output()
-    trunc_X = X & 0x3FFF
+    trunc_X = np.clip(X, -2**13, 2**13-1,).round().astype(np.int64)
+    
+    # trunc_X = X & 0x3FFF
     
 
-    if trunc_X & 0x2000:
-        trunc_X -= 0x4000
+    # if trunc_X & 0x2000:
+    #     trunc_X -= 0x4000
         
     noise_samples[i] = trunc_X
 
