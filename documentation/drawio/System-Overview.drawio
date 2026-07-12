@@ -1,0 +1,35 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="aPPWomi99XciKJx2Bxq5">
+    <mxGraphModel dx="1488" dy="1583" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="qYaKnxALAPM3vykaMT5q-1" parent="1" style="shadow=0;dashed=0;align=center;html=1;strokeWidth=1;shape=mxgraph.electrical.logic_gates.qfp_ic;whiteSpace=wrap;labelNames=a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,a1,b1,c1,d1,e1,f1,g1,h1,i1,j1,k1,l1,m1,n1;" value="FPGA for Transmission" vertex="1">
+          <mxGeometry height="200" width="200" x="-218" y="-90" as="geometry" />
+        </mxCell>
+        <mxCell id="qYaKnxALAPM3vykaMT5q-2" parent="1" style="shadow=0;dashed=0;align=center;html=1;strokeWidth=1;shape=mxgraph.electrical.logic_gates.qfp_ic;whiteSpace=wrap;labelNames=a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,a1,b1,c1,d1,e1,f1,g1,h1,i1,j1,k1,l1,m1,n1;" value="FPGA for Channel" vertex="1">
+          <mxGeometry height="200" width="200" x="59" y="-90" as="geometry" />
+        </mxCell>
+        <mxCell id="qYaKnxALAPM3vykaMT5q-3" parent="1" style="shadow=0;dashed=0;align=center;html=1;strokeWidth=1;shape=mxgraph.electrical.logic_gates.qfp_ic;whiteSpace=wrap;labelNames=a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,a1,b1,c1,d1,e1,f1,g1,h1,i1,j1,k1,l1,m1,n1;" value="FPGA for Receiver" vertex="1">
+          <mxGeometry height="200" width="200" x="336" y="-90" as="geometry" />
+        </mxCell>
+        <mxCell id="qYaKnxALAPM3vykaMT5q-4" edge="1" parent="1" source="qYaKnxALAPM3vykaMT5q-1" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0;entryDx=0;entryDy=90;entryPerimeter=0;fontSize=12;startSize=8;endSize=8;exitX=1;exitY=0;exitDx=0;exitDy=90;exitPerimeter=0;" target="qYaKnxALAPM3vykaMT5q-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qYaKnxALAPM3vykaMT5q-7" connectable="0" parent="qYaKnxALAPM3vykaMT5q-4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;" value="14 bit chip code" vertex="1">
+          <mxGeometry relative="1" x="-0.2455" y="2" as="geometry">
+            <mxPoint x="10" y="-13" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qYaKnxALAPM3vykaMT5q-6" edge="1" parent="1" source="qYaKnxALAPM3vykaMT5q-2" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0;exitDx=0;exitDy=90;exitPerimeter=0;entryX=0;entryY=0;entryDx=0;entryDy=90;entryPerimeter=0;fontSize=12;startSize=8;endSize=8;" target="qYaKnxALAPM3vykaMT5q-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qYaKnxALAPM3vykaMT5q-8" connectable="0" parent="qYaKnxALAPM3vykaMT5q-6" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;" value="14 bit chip code&lt;div&gt;mixed with noise&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1058" y="-1" as="geometry">
+            <mxPoint x="5" y="-23" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
