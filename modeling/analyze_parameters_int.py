@@ -5,6 +5,7 @@ import pylfsr as pyl
 from pylfsr import LFSR
 import math
 import pandas as pd
+import pickle
 
 from helper import bytesToPlusMinus, code_acquisition, decode, ber
 
@@ -76,10 +77,10 @@ for i in range(repeats):
                 #results if code acquisition always is successfull
                 data_awgn_ideal = decode(tx_sig_awgn, code, offset)[:len(data)]
                 data_bn_ideal = decode(tx_sig_bn, code, offset)[:len(data)]
-                ber_awgn_ideal = ber(bits, data_awgn)
-                ber_bn_ideal = ber(bits, data_bn)
-                res_awgn_ideal.append(ber_awgn)
-                res_bn_ideal.append(ber_bn)
+                ber_awgn_ideal = ber(bits, data_awgn_ideal)
+                ber_bn_ideal = ber(bits, data_bn_ideal)
+                res_awgn_ideal.append(ber_awgn_ideal)
+                res_bn_ideal.append(ber_bn_ideal)
                 print("AWGN SNR        : " + str(snr) + "; offset: " + str(offset) + "; detected offset: " + str(offset_awgn) + "; BER: " + str(ber_awgn))
                 print("Binary Noise SNR: " + str(snr) + "; offset: " + str(offset) + "; detected offset: " + str(offset_bn) + "; BER: " + str(ber_bn))
             results["awgn"][snr] = res_awgn
@@ -87,21 +88,23 @@ for i in range(repeats):
             results["awgn_ideal"][snr] = res_awgn_ideal
             results["bn_ideal"][snr] = res_bn_ideal
 
+
+with open('sim_results_int.pkl','wb') as f:
+    pickle.dump(results, f)
+
 BER_FLOOR = 1e-4
-snr_sorted = sorted(results["awgn"].keys())
+snr_sorted = sorted(results["awgn_ideal"].keys())
  
 all_vals = np.concatenate([
-    np.clip(results["awgn"][snr], BER_FLOOR, None) for snr in snr_sorted
-] + [
-    np.clip(results["bn"][snr], BER_FLOOR, None) for snr in snr_sorted
+    np.clip(results["awgn_ideal"][snr], BER_FLOOR, None) for snr in snr_sorted
 ])
+
 y_min, y_max = all_vals.min() * 0.7, all_vals.max() * 1.3
  
-fig, axs = plt.subplots(2, figsize=(9, 8), sharex=True)
+fig, axs = plt.subplots(2, figsize=(9, 6), sharex=True)
 fig.suptitle("BER vs SNR")
  
-panels = [(axs[0], "awgn", "AWGN", "tab:blue"),
-          (axs[1], "bn", "Binary Noise", "tab:orange")]
+panels = [(axs, "awgn_ideal", "AWGN", "tab:blue")]
  
 for ax, key, title, color in panels:
     ax.set_title(title)
@@ -120,8 +123,8 @@ for ax, key, title, color in panels:
     ax.grid(True, which="both", linestyle="--", alpha=0.4)
     ax.legend(loc="upper right")
  
-axs[-1].set_xlabel("SNR [dB]")
-axs[-1].set_xticks(snr_sorted)
+axs.set_xlabel("SNR [dB]")
+axs.set_xticks(snr_sorted)
 fig.tight_layout()
 plt.show()
  
