@@ -6,6 +6,7 @@
     #text(size: 0.8em)[#emoji.pencil]  #text(it, fill: red, weight: 600)
   ]
 ]
+#set page(numbering: "1")
 
 #show: ieee.with(
   title: [],
