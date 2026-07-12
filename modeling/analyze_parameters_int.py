@@ -87,17 +87,41 @@ for i in range(repeats):
             results["awgn_ideal"][snr] = res_awgn_ideal
             results["bn_ideal"][snr] = res_bn_ideal
 
-fig, axs = plt.subplots(2)
+BER_FLOOR = 1e-4
+snr_sorted = sorted(results["awgn"].keys())
+ 
+all_vals = np.concatenate([
+    np.clip(results["awgn"][snr], BER_FLOOR, None) for snr in snr_sorted
+] + [
+    np.clip(results["bn"][snr], BER_FLOOR, None) for snr in snr_sorted
+])
+y_min, y_max = all_vals.min() * 0.7, all_vals.max() * 1.3
+ 
+fig, axs = plt.subplots(2, figsize=(9, 8), sharex=True)
 fig.suptitle("BER vs SNR")
-axs[0].set_title("AWGN")
-for snr in results["awgn"].keys():
-    axs[0].scatter([snr] * len(results["awgn"][snr]), results["awgn"][snr])
-
-axs[1].set_title("Binary Noise")
-for snr in results["bn"].keys():
-    axs[1].scatter([snr] * len(results["bn"][snr]), results["bn"][snr])
-
-for ax in axs.flat:
-    ax.set(xlabel='SNR[dB]', ylabel='BER')
+ 
+panels = [(axs[0], "awgn", "AWGN", "tab:blue"),
+          (axs[1], "bn", "Binary Noise", "tab:orange")]
+ 
+for ax, key, title, color in panels:
+    ax.set_title(title)
+    for snr in snr_sorted:
+        vals = np.clip(np.asarray(results[key][snr], dtype=float), BER_FLOOR, None)
+        jitter = rng.normal(scale=0.15, size=len(vals))
+        ax.scatter(snr + jitter, vals, s=16, alpha=0.35, color=color,
+                   edgecolors="none", label="samples" if snr == snr_sorted[0] else None)
+ 
+    means = [np.mean(np.clip(results[key][snr], BER_FLOOR, None)) for snr in snr_sorted]
+    ax.plot(snr_sorted, means, marker="o", color="black", linewidth=1.2, label="mean BER")
+ 
+    ax.set_yscale("log")
+    ax.set_ylim(y_min, y_max)
+    ax.set_ylabel("BER")
+    ax.grid(True, which="both", linestyle="--", alpha=0.4)
+    ax.legend(loc="upper right")
+ 
+axs[-1].set_xlabel("SNR [dB]")
+axs[-1].set_xticks(snr_sorted)
+fig.tight_layout()
 plt.show()
-
+ 
