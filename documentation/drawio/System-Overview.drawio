@@ -18,7 +18,7 @@
         </mxCell>
         <mxCell id="qYaKnxALAPM3vykaMT5q-7" connectable="0" parent="qYaKnxALAPM3vykaMT5q-4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;" value="14 bit chip code" vertex="1">
           <mxGeometry relative="1" x="-0.2455" y="2" as="geometry">
-            <mxPoint x="9" y="-8" as="offset" />
+            <mxPoint x="10" y="-13" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="qYaKnxALAPM3vykaMT5q-6" edge="1" parent="1" source="qYaKnxALAPM3vykaMT5q-2" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0;exitDx=0;exitDy=90;exitPerimeter=0;entryX=0;entryY=0;entryDx=0;entryDy=90;entryPerimeter=0;fontSize=12;startSize=8;endSize=8;" target="qYaKnxALAPM3vykaMT5q-3">
@@ -26,7 +26,7 @@
         </mxCell>
         <mxCell id="qYaKnxALAPM3vykaMT5q-8" connectable="0" parent="qYaKnxALAPM3vykaMT5q-6" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;" value="14 bit chip code&lt;div&gt;mixed with noise&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.1058" y="-1" as="geometry">
-            <mxPoint x="4" y="-19" as="offset" />
+            <mxPoint x="5" y="-23" as="offset" />
           </mxGeometry>
         </mxCell>
       </root>
