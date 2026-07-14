@@ -30,6 +30,8 @@ To setup SpinalHDL, it is advised to use the SpinalHDL [installation guide](http
 
 # Virtual environment setup
 
+For the python simulation, setting up a virtual environment is advised:
+
 ```bash
 cd modeling/
 python -m venv venv
@@ -74,7 +76,9 @@ This project uses Mill as a build system. Mill is already setup for this reposit
 ## Makefile 
 
 We try to avoid interacting with Mill directly, as its auto-completion can give lots of results, when few would suffice, and seems quite slow. 
-For this, we wrote a simple `Makefile`. The Makefile lets us interact with all the most needed features. 
+For this, we wrote a simple `Makefile`. The Makefile lets us interact with all the most needed features.
+
+*All commands have to be run commands from the `src` directory*
 
 For a Makefile target overview, see:
 
@@ -142,7 +146,7 @@ Use this command and then reload your shell:
 
 This is a list of all possible Mill tasks for this project
 
-All tasks are run from the repo root as `./mill spreads.<task>`.
+All tasks are run from the `src` directory as `./mill spreads.<task>`.
 
 #### Generation
 
