@@ -37,11 +37,11 @@ lfsr2 = UnrollLFSR(size=32, taps=[31, 21, 1, 0], steps=8) #3
 lfsr3 = UnrollLFSR(size=32, taps=[31, 21, 20, 19, 17, 16, 14, 12, 11, 9, 7, 5, 3, 0], steps=6) #1
 lfsr4 = UnrollLFSR(size=32, taps=[31, 27, 18, 17, 15, 13, 10, 9, 8, 5, 4, 0], steps=7) #5
 
-num_samples = 100_000_00
+num_samples = 100_000
 noise_samples = np.zeros(num_samples)
 
 for i in range(num_samples):
-    X = lfsr0.get_output() + lfsr1.get_output() + lfsr2.get_output() + lfsr3.get_output() + lfsr4.get_output()
+    X = lfsr0.get_output() + lfsr1.get_output() + lfsr2.get_output() + lfsr3.get_output() #+ lfsr4.get_output()
     trunc_X = np.clip(X, -2**13, 2**13-1,).round()
     
     # trunc_X = X & 0x3FFF
@@ -79,11 +79,11 @@ plt.tight_layout()
 
 # plt.show()
 
-plt.figure()
-sp = np.fft.fft(noise_samples)
-freq = np.fft.fftfreq(noise_samples.shape[-1])
+# plt.figure()
+# sp = np.fft.fft(noise_samples)
+# freq = np.fft.fftfreq(noise_samples.shape[-1])
 
-plt.plot(freq,np.abs(sp))
-plt.xlabel("frequency")
-plt.ylabel("fft(x)")
+# plt.plot(freq,np.abs(sp))
+# plt.xlabel("frequency")
+# plt.ylabel("fft(x)")
 plt.show()
