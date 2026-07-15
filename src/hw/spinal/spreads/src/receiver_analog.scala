@@ -61,7 +61,8 @@ case class Receiver_Analog(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integrat
   for (acq <- acqList) {
     acq.io.enable := io.enable
     acq.io.signal := io.signal
-    when(acq.io.found & (acq.io.max > maxReg)) {
+    val foundReg0 = RegNext(acq.io.found)
+    when(foundReg0 & (acq.io.max > maxReg)) {
       maxReg := acq.io.max
       lfsr_tracking.io.load := True
       lfsr_tracking.io.i_parallel := acq.io.lfsr_state
@@ -158,6 +159,7 @@ case class Code_Acquisition(poly: Array[Int], m_lfsr: Int, n_adc: Int, n_integra
       val sSearch, sTracking = newElement()
     }
     val state = Reg(TrackState()) init (TrackState.sSearch)
+    state := TrackState.sSearch
     state.setName("ReceiverState")
 
     when(io.enable) {
